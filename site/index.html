@@ -35,7 +35,11 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 
 #map{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 #legend{position:absolute;left:12px;top:12px;background:rgba(12,22,32,.9);color:#e9e4d8;border:1px solid var(--gold2);border-radius:8px;padding:9px 12px;font-size:13px;max-width:min(300px,60%);box-shadow:0 4px 14px rgba(0,0,0,.45)}
 #legend b{font-family:Caladea,serif;font-size:15px;color:#f3ead2}
-#myth{position:absolute;left:0;top:0;width:160px;height:160px;transform:translate(-50%,-50%);pointer-events:none;opacity:0;animation:mythIn 2.6s ease-out 1.1s forwards;z-index:1}
+#myth{position:absolute;left:0;top:0;width:160px;height:160px;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:1;visibility:hidden}
+#myth.on{visibility:visible;animation:mythIn 1.8s ease-out .15s forwards}
+#myth.on .flare{animation:mythFlare 3.2s ease-out .2s forwards}
+#myth .flare{position:absolute;inset:-35%;border-radius:50%;opacity:0;background:radial-gradient(circle,rgba(255,246,210,.95) 0,rgba(255,214,120,.55) 18%,rgba(255,190,90,.15) 42%,rgba(255,190,90,0) 66%);mix-blend-mode:screen;pointer-events:none}
+@keyframes mythFlare{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25)}}
 #myth .halo,#myth .rays,#myth .core{position:absolute;inset:0;border-radius:50%}
 #myth .halo{background:radial-gradient(circle,rgba(255,236,170,.32) 0,rgba(255,206,110,.14) 22%,rgba(255,190,90,.04) 45%,rgba(255,190,90,0) 62%);animation:mythPulse 4.5s ease-in-out infinite;mix-blend-mode:screen}
 #myth .rays{background:repeating-conic-gradient(from 0deg,rgba(255,226,150,.07) 0 5deg,rgba(255,226,150,0) 5deg 22deg);-webkit-mask:radial-gradient(circle,#000 8%,transparent 66%);mask:radial-gradient(circle,#000 8%,transparent 66%);animation:mythSpin 40s linear infinite;mix-blend-mode:screen}
@@ -45,7 +49,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 
 @keyframes mythIn{0%{opacity:0;filter:blur(8px);transform:translate(-50%,-50%) scale(.4)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @keyframes mythPulse{0%,100%{transform:scale(.95);opacity:.8}50%{transform:scale(1.08);opacity:1}}
 @keyframes mythSpin{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){#myth{animation:none;opacity:1}#myth .halo,#myth .rays{animation:none}}
+@media(prefers-reduced-motion:reduce){#myth.on{animation:none;opacity:1}#myth .halo,#myth .rays,#myth.on .flare{animation:none}}
 #mini{position:absolute;left:12px;bottom:12px;width:190px;height:160px;border:2px solid var(--gold2);border-radius:6px;background:#0a1622;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:pointer}
 #lensbar{position:absolute;right:12px;bottom:12px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:calc(100% - 230px);padding:5px;background:rgba(12,22,32,.85);border:1px solid var(--gold2);border-radius:8px}
 #lensbar button{border:1px solid #3a4f62;background:linear-gradient(#22364a,#172636);color:#e6dfcd;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer;min-height:36px}
@@ -131,7 +135,7 @@ header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;
     <div id="legend"></div><div id="tip"></div>
     <canvas id="mini" aria-label="Pregledna mapa, klik pomjera pogled"></canvas>
     <div id="lensbar" aria-label="Brza sočiva"></div>
-    <div id="myth" aria-hidden="false"><div class="rays"></div><div class="halo"></div><div class="core"></div><button class="mlab" type="button">Lovćen<small>Njegoševa kapela</small></button></div>
+    <div id="myth" aria-hidden="true"><div class="flare"></div><div class="rays"></div><div class="halo"></div><div class="core"></div><button class="mlab" type="button">Lovćen<small>Njegoševa kapela</small></button></div>
   </div>
   <aside>
     <div class="tabs" role="tablist">
@@ -165,8 +169,8 @@ const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture
 let touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
 const cv=$('#map');let cx=cv.getContext('2d');const CX0=cx;
 
-let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png'}
-Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u).then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
+let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=5'}
+Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=5').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
 
 function init(){
   hexes=D.hexes;nat=D.meta.nat;
@@ -365,8 +369,9 @@ function draw(){
   if(SC.s===s)overlay(W,H);else{legend();mini()}
   placeMyth(W,H);
 }
+function mythShow(){const m=$('#myth');m.classList.remove('on');m.setAttribute('aria-hidden',!showHoly);if(showHoly){void m.offsetWidth;m.classList.add('on')}}
 function placeMyth(W,H){const m=$('#myth'),h=V.holy.find(x=>x.id==='Q13424615');if(!h)return;const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=Math.max(70,Math.min(200,s*5));
-  m.style.width=m.style.height=z+'px';m.style.left=x+'px';m.style.top=y+'px';m.style.display=(x<-z||y<-z||x>W+z||y>H+z)?'none':'block';
+  m.style.width=m.style.height=z+'px';m.style.left=x+'px';m.style.top=y+'px';m.style.display=(!showHoly||x<-z||y<-z||x>W+z||y>H+z)?'none':'block';
   const L=m.querySelector('.mlab');L.style.fontSize=Math.max(13,Math.min(18,s*.6))+'px';L.style.display=s<9?'none':'block'}
 function rebuild(W,H){
   if(!SC||SC.W!==W||SC.H!==H||SC.dpr!==dpr){const c=document.createElement('canvas');c.width=(W+2*MG)*dpr;c.height=(H+2*MG)*dpr;SC={c,g:c.getContext('2d')}}
@@ -424,6 +429,9 @@ function paintStatic(W,H){
   const [x0,x1,y0,y1]=worldBox,cxm=((x0+x1)/2)*s+tx,cym=((y0+y1)/2)*s+ty,rad=Math.max(x1-x0,y1-y0)/2*s;
   const fg=cx.createRadialGradient(cxm,cym,rad*.62,cxm,cym,rad*1.02);fg.addColorStop(0,'rgba(9,22,36,0)');fg.addColorStop(.7,'rgba(9,22,36,.55)');fg.addColorStop(1,'rgba(9,22,36,1)');
   cx.fillStyle=fg;cx.fillRect(0,0,W,H);
+  {const K=V.countries.find(c=>c.n==='KOSOVO I METOHIJA');if(K){const kx=K.p[0]*s+tx,ky=K.p[1]*s+ty;
+    for(let j=0;j<9;j++){const bx=kx+(hsh(j,3)-.5)*s*26,by=ky+(hsh(3,j)-.5)*s*18,br=s*(7+hsh(j,9)*7);const cg=cx.createRadialGradient(bx,by,br*.1,bx,by,br);
+      cg.addColorStop(0,'rgba(160,176,196,.13)');cg.addColorStop(1,'rgba(160,176,196,0)');cx.fillStyle=cg;cx.beginPath();cx.arc(bx,by,br,0,7);cx.fill()}}}
   for(let i=0;i<46;i++){const a=i/46*Math.PI*2+hsh(i,7)*.2,rr2=rad*(1+hsh(i,3)*.25),x=cxm+Math.cos(a)*rr2,y=cym+Math.sin(a)*rr2;
     for(let j=0;j<4;j++){const bx=x+(hsh(i,j)-.5)*rad*.14,by=y+(hsh(j,i)-.5)*rad*.08,br=rad*(.05+hsh(i+j,11)*.06);
       const cg=cx.createRadialGradient(bx,by-br*.3,br*.1,bx,by,br);cg.addColorStop(0,'rgba(150,168,190,.09)');cg.addColorStop(1,'rgba(150,168,190,0)');cx.fillStyle=cg;cx.beginPath();cx.arc(bx,by,br,0,7);cx.fill()}}
@@ -433,7 +441,8 @@ function overlay(W,H){
   // 7b. susjedne zemlje i Prevlaka
   if(s<22){cx.textAlign='center';cx.textBaseline='middle';for(const c of V.countries){const x=c.p[0]*s+tx,y=c.p[1]*s+ty;if(x<-200||y<-40||x>W+200||y>H+40)continue;
     const fs=Math.max(12,Math.min(26,s*1.3));cx.font=`700 ${fs}px Caladea,serif`;try{cx.letterSpacing=(fs*.3)+'px'}catch(e){}
-    cx.fillStyle=c.n==='JADRANSKO MORE'?'rgba(170,215,235,.55)':'rgba(225,228,232,.5)';cx.fillText(c.n,x,y)}try{cx.letterSpacing='0px'}catch(e){}cx.textBaseline='alphabetic'}
+    const kim=c.n==='KOSOVO I METOHIJA';if(kim){cx.save();cx.filter='blur(.9px)'}
+    cx.fillStyle=c.n==='JADRANSKO MORE'?'rgba(170,215,235,.55)':kim?'rgba(225,228,232,.55)':'rgba(225,228,232,.5)';cx.fillText(c.n,x,y);if(kim)cx.restore()}try{cx.letterSpacing='0px'}catch(e){}cx.textBaseline='alphabetic'}
   {const P=V.prevlaka,x=P.p[0]*s+tx,y=P.p[1]*s+ty,z=Math.max(6,Math.min(16,s*.55));P._xy=[x,y,z+4];
     cx.setLineDash([3,3]);cx.strokeStyle='#ffb347';cx.lineWidth=2;cx.beginPath();cx.arc(x,y,z,0,7);cx.stroke();cx.setLineDash([]);
     if(s>5){cx.font=`italic 700 ${Math.max(11,Math.min(14,s*.5))}px Caladea,serif`;cx.textAlign='right';cx.lineWidth=3;cx.strokeStyle='rgba(10,10,10,.85)';
@@ -498,7 +507,7 @@ function starP(x,y,r,col){cx.beginPath();for(let i=0;i<10;i++){const a=Math.PI/5
 function medal(x,y,r){const g=cx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);g.addColorStop(0,'#fff1b8');g.addColorStop(1,'#b8862a');
   cx.beginPath();cx.arc(x,y,r,0,7);cx.fillStyle=g;cx.fill();cx.strokeStyle='#3a2600';cx.lineWidth=1.2;cx.stroke();starP(x,y,r*.62,'#5a3a00')}
 /* sveta mjesta: značka u obliku heksa sa simbolom; ista boja za sve vjere */
-let showHoly=true;
+let showHoly=false;
 const HK={orthodox:'Pravoslavni hram',catholic:'Katolički hram',islam:'Džamija',memorial:'Memorijalno mjesto'};
 function holyGlyph(g,k,z){g.save();g.fillStyle='#3a2a12';g.strokeStyle='#3a2a12';g.lineWidth=z*.09;const u=z*.55;
   if(k==='islam'){g.beginPath();g.arc(-u*.15,u*.15,u*.48,Math.PI,0);g.lineTo(u*.33,u*.62);g.lineTo(-u*.63,u*.62);g.closePath();g.fill();g.fillRect(u*.5,-u*.65,u*.2,u*1.27);g.beginPath();g.arc(u*.6,-u*.82,u*.17,0,7);g.fill()}
@@ -534,7 +543,7 @@ function buildSearch(){
   $('#q').addEventListener('change',e=>{const v=e.target.value.trim();if(!v)return;
     if(T[v]){openCity(v);e.target.value='';return}
     const w=D.wonders.find(x=>x.name===v),h=V.holy.find(x=>x.n===v);let px,py;
-    if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];showHoly=true;lensbar()}else return;
+    if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];if(!showHoly){showHoly=true;lensbar();mythShow()}}else return;
     const r=cv.getBoundingClientRect();touched=true;s=Math.max(s,16);tx=r.width/2-px*s;ty=r.height/2-py*s;draw();
     setTimeout(()=>{if(h&&h._xy){tip(h._xy[0],h._xy[1])}else tip(r.width/2,r.height/2)},80);e.target.value=''})}
 ['#myth .mlab','#myth .core'].forEach(q=>document.querySelector(q).addEventListener('click',e=>{const h=V.holy.find(x=>x.id==='Q13424615'),t=$('#tip'),r=cv.getBoundingClientRect(),b=e.target.getBoundingClientRect();
@@ -553,7 +562,7 @@ function mini(){
 $('#mini').addEventListener('click',e=>{if(!miniT)return;const[k,ox,oy]=miniT,wx=(e.offsetX-ox)/k,wy=(e.offsetY-oy)/k,r=cv.getBoundingClientRect();touched=true;tx=r.width/2-wx*s;ty=r.height/2-wy*s;draw()});
 const QL=[['terrain','Teren'],['pop','Stanovnici'],['gold','Zlato'],['m:Indeks bogatstva','Bogatstvo'],['nights','Turizam'],['science','Nauka'],['cat:_nacija','Nacija']];
 function lensbar(){$('#lensbar').innerHTML=`<button id="holyT" aria-pressed="${showHoly}" title="Prikaži ili sakrij sveta mjesta">Sveta mjesta</button>`+QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
-$('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){showHoly=!showHoly;e.target.setAttribute('aria-pressed',showHoly);draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
+$('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){showHoly=!showHoly;e.target.setAttribute('aria-pressed',showHoly);mythShow();draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
 
 /* ---------- interaction ---------- */
 function pick(sx,sy){const px=(sx-tx)/s,py=(sy-ty)/s;let r=-py/1.5,q=px/SQ3-r/2,z=-q-r;let rq=Math.round(q),rr2=Math.round(r),rz=Math.round(z);
