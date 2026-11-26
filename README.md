@@ -8,9 +8,11 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 
 ![CG Civ - mapa terena sa gradovima i čudima](docs/mapa.png)
 
-| Pogled grada | Najbrojnija nacija (Popis 2023) |
+| Teren izbliza: Boka, Lovćen, Cetinje | Pogled grada |
 |---|---|
-| ![Pogled grada Kotor](docs/pogled-grada.png) | ![Najbrojnija nacija po opštinama](docs/nacije.png) |
+| ![Teren izbliza: šume, planine, rijeke i gradovi](docs/detalj.png) | ![Pogled grada Podgorica](docs/pogled-grada.png) |
+| **Najbrojnija nacija (Popis 2023)** | **Istraživač** |
+| ![Najbrojnija nacija po opštinama](docs/nacije.png) | ![Istraživač: dijagram rasipanja i tabela opština](docs/istrazivac.png) |
 
 Kratki video (13 s, originalna muzika): [docs/cg-civ-kratki.mp4](docs/cg-civ-kratki.mp4) · trejler (25 s): [docs/cg-civ-trailer.mp4](docs/cg-civ-trailer.mp4)
 
@@ -18,7 +20,7 @@ Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule
 
 ## Šta ima
 
-- **Mapa:** teren izveden iz reljefa, gradovi (sjedišta opština), 20 čuda, elektrane.
+- **Mapa:** teren iz satelitskog pokrivača tla (ESA WorldCover 2021: šume, livade, makija, polja, naselja) i reljefa (brda, planine, snijeg, sjenčenje), rijeke iz OSM-a, Jadran i susjedne zemlje u magli, gradski barjaci sa distriktima, 20 čuda, elektrane, pregledna mapa i brza sočiva.
 - **46 sočiva:** 10 prinosa po heksu (zlato, proizvodnja, nauka, kultura, vjera, hrana, stanovnici, noćenja, reljef, teren), 4 sočiva bogatstva (indeks bogatstva, masa zarada po stanovniku, plata januar-septembar 2026, rast plate), 14 pokazatelja po opštini i 18 sočiva iz Popisa 2023 (najbrojnija nacija, najčešći jezik, udjeli nacija, jezika i vjera).
 - **Pogled grada** za 25 opština: prinosi, distrikti po objavljenim pravilima, građani, popisi 1991-2011-2023, rang među opštinama.
 - **11 savjetnika:** nalazi izračunati iz podataka, uz dugme koje pali odgovarajuće sočivo.
@@ -50,6 +52,8 @@ Brojke opština raspoređene su po heksovima prema naseljenosti (Kontur). Noćen
 - MONSTAT, Procjene stanovništva i osnovni demografski pokazatelji 2025 (saopštenje 59/2026): prirodni priraštaj
 - Kontur Boundaries i Kontur Population ME 2023 (CC BY 4.0)
 - Terrarium visinske pločice (AWS Open Data / Mapzen)
+- ESA WorldCover 2021 v200, 10 m (CC BY 4.0): pokrivač tla po heksu
+- © OpenStreetMap saradnici (ODbL): rijeke
 - Natural Earth (javno dobro)
 - © OpenStreetMap saradnici (ODbL): bogomolje, smještaj, baština
 - Wikidata (CC0): elektrane i čuda
@@ -72,12 +76,13 @@ python3 scripts/extract_stats.py      # MONSTAT / ZZZCG PDF -> build/muni_stats.
 python3 scripts/extract_popis2.py     # Popis 2023: nacija, jezik, vjera -> build/popis2.json
 python3 scripts/extract_2026.py       # turizam 2025/2026, nezaposleni 6/2026, priraštaj 2025
 python3 scripts/build_hex.py          # heks mreža -> build/cgciv.json
-cp build/cgciv.json site/
+python3 scripts/build_visual.py       # pokrivač tla, okolne zemlje, rijeke -> build/cgviz.json (traži rasterio)
+cp build/cgciv.json build/cgviz.json site/
 ```
 
 ## Ograničenja
 
-- Teren je izveden iz reljefa, nema sloja pokrivača tla (šume, njive).
+- Pokrivač tla je satelitska klasifikacija iz 2021, uzorkovana sa 61 tačkom po heksu; mali objekti i usjevi mogu biti propušteni.
 - Petnjica nema objavljen turizam za 2025; mjesečni hotelski podaci za 8 malih opština se ne objavljuju (povjerljivost).
 - Zdravstveni radnici nijesu objavljeni za Gusinje, Petnjicu, Tuzi i Zetu.
 - Plate po opštinama očitane su sa slike tabele u biltenu, pa ih treba provjeriti pri svakom ažuriranju.
