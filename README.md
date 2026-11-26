@@ -12,7 +12,7 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 |---|---|
 | ![Pogled grada Kotor](docs/pogled-grada.png) | ![Istraživač: fakultet i plata po opštinama](docs/istrazivac.png) |
 
-Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://x.com/SchuleDR), Podgorica. Kontakt: radovan.susic@gmail.com
+Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me · X: [@SchuleDR](https://x.com/SchuleDR)
 
 ## Šta ima
 
