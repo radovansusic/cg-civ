@@ -137,7 +137,7 @@ function init(){
   for(const h of hexes){h.px=SQ3*(h.q+h.r/2);h.py=-1.5*h.r;byKey[h.q+','+h.r]=h}
   for(const c of D.cities)cityByKey[c.q+','+c.r]=c;
   for(const r of D.table)T[r['Opština']]=r;
-  $('#pills').innerHTML=[['Stanovnici',fmt(nat.pop2023)],['Zlato',fmt(nat.wagebill_meur)+' mil. €'],['Firme',fmt(nat.firms2025)],['Noćenja',fmt(nat.nights2024/1e6,1)+' mil.'],['Heksova',fmt(hexes.length)]]
+  $('#pills').innerHTML=[['Stanovnici',fmt(nat.pop2023)],['Zlato',fmt(nat.wagebill_meur)+' mil. €'],['Firme',fmt(nat.firms2025)],['Noćenja',fmt(nat.nights2025/1e6,1)+' mil.'],['Heksova',fmt(hexes.length)]]
     .map(([a,b])=>`<span class="pill">${a} <b>${b}</b></span>`).join('');
   buildLenses();buildAdvisors();buildExplorer();buildSources();resize();fit();
 }
@@ -150,20 +150,20 @@ const HL={
   gold:{g:'Prinosi heksa',l:'Zlato',d:'1 zlato = 1 mil. € godišnje mase neto zarada (zaposleni x plata x 12), raspoređeno po stanovnicima',v:h=>h.gold,log:1,ramp:['#3a2f12','#c9952c','#ffe7a3']},
   prod:{g:'Prinosi heksa',l:'Proizvodnja',d:'Teren + aktivne firme 2025 (1 po 60) + elektrane (1 po 20 MW)',v:h=>h.prod,ramp:['#2a1a10','#c8692a','#ffd2a8']},
   science:{g:'Prinosi heksa',l:'Nauka',d:'Stanovnici sa fakultetom (Popis 2023), 1 po 300',v:h=>h.science,log:1,ramp:['#0f2238','#3f7fc9','#cfe4ff']},
-  culture:{g:'Prinosi heksa',l:'Kultura i turizam',d:'Objekti baštine u OSM + noćenja 2024 (1 po 25.000)',v:h=>h.culture,log:1,ramp:['#1f1029','#8a4bb0','#ecd3ff']},
+  culture:{g:'Prinosi heksa',l:'Kultura i turizam',d:'Objekti baštine u OSM + noćenja 2025 (1 po 25.000)',v:h=>h.culture,log:1,ramp:['#1f1029','#8a4bb0','#ecd3ff']},
   faith:{g:'Prinosi heksa',l:'Vjera',d:'Broj bogomolja u OpenStreetMap, bez podjele po vjeri',v:h=>h.faith,log:1,ramp:['#2a2620','#bfb39a','#fffaf0']},
   food:{g:'Prinosi heksa',l:'Hrana',d:'Po terenu, +1 uz more i uz jezero (pravilo igre, ne podatak o proizvodnji)',v:h=>h.food,ramp:['#1f2a14','#4f9a3c','#d6f5b8']},
-  nights:{g:'Prinosi heksa',l:'Noćenja',d:'Noćenja 2024 opštine raspoređena po smještajnim objektima iz OSM',v:h=>h.nights,log:1,ramp:['#10202c','#2e9aa8','#c9fbff']},
+  nights:{g:'Prinosi heksa',l:'Noćenja',d:'Noćenja 2025 opštine raspoređena po smještajnim objektima iz OSM',v:h=>h.nights,log:1,ramp:['#10202c','#2e9aa8','#c9fbff']},
 };
-const WEALTH_LENS=['Indeks bogatstva','Masa zarada po st. €','Neto plata 01-09.2026 €','Rast plate 2026/2025 %'];
+const WEALTH_LENS=['Indeks bogatstva','Masa zarada po st. €','Neto plata 01-09.2026 €','Rast plate 2026/2025 %','Rast hotela avg-sep 2026 %'];
 const POPIS_LENS=['Crnogorci %','Srbi %','Bošnjaci %','Albanci %','Muslimani %','Hrvati %','Rusi %','Ukrajinci %','Govori srpski %','Govori crnogorski %','Govori bosanski %','Govori albanski %','Pravoslavni %','Islam %','Katolici %','Ateisti %'];
 const CATS={'cat:_nacija':{l:'Najbrojnija nacija',c:{Crnogorci:'#c98b6f',Srbi:'#6f8fbf',Bošnjaci:'#6fae8a',Albanci:'#d9b24a'}},'cat:_jezik':{l:'Najčešći jezik u govoru',c:{Crnogorski:'#c98b6f',Srpski:'#6f8fbf',Bosanski:'#6fae8a',Albanski:'#d9b24a'}}};
 const MUNI_LENS=['Neto plata 2025 €','Nezaposlenost % (reg.)','Firme na 1.000 st.','Rast firmi 2024-25 %','Fakultet % (15+)','Programiranje %','Noćenja po stanovniku','Sezonski stanovi %','Promjena 1991-2023 %','Prirodni priraštaj ‰','65+ %','Ljekari na 10.000 st.','MOP korisnici na 1.000 st.','Gustina st/km2'];
-const DIVERGE=new Set(['Promjena 1991-2023 %','Prirodni priraštaj ‰','Rast firmi 2024-25 %','Rast plate 2026/2025 %','Indeks bogatstva']);
+const DIVERGE=new Set(['Promjena 1991-2023 %','Prirodni priraštaj ‰','Rast firmi 2024-25 %','Rast plate 2026/2025 %','Indeks bogatstva','Rast hotela avg-sep 2026 %']);
 function buildLenses(){
   let g='',out='';
   const all=[...Object.entries(HL).map(([k,o])=>[k,o.g,o.l,o.d]),
-    ...WEALTH_LENS.map(c=>['m:'+c,'Bogatstvo',c,c==='Indeks bogatstva'?'CG Civ procjena, nije BDP: prosjek z-vrijednosti mase zarada po stanovniku, firmi na 1.000, sezonskih stanova i udjela sa fakultetom':c.includes('2026')?'MONSTAT, prosjek januar-septembar 2026':'Zaposleni x plata x 12 / stanovnici']),
+    ...WEALTH_LENS.map(c=>['m:'+c,'Bogatstvo',c,c==='Indeks bogatstva'?'CG Civ procjena, nije BDP: prosjek z-vrijednosti mase zarada po stanovniku, firmi na 1.000, sezonskih stanova i udjela sa fakultetom':c.startsWith('Rast hotela')?'Noćenja u kolektivnom smještaju avgust+septembar 2026 prema 2025, MONSTAT; 8 opština MONSTAT ne objavljuje':c.includes('2026')?'MONSTAT, prosjek januar-septembar 2026':'Zaposleni x plata x 12 / stanovnici']),
     ...MUNI_LENS.map(c=>['m:'+c,'Po opštinama',c,'Vrijednost opštine, sve heksove boji isto']),
     ...Object.entries(CATS).map(([k,o])=>[k,'Popis 2023: nacija, jezik, vjera',o.l,'Najveća grupa u opštini prema slobodnom izjašnjavanju']),
     ...POPIS_LENS.map(c=>['m:'+c,'Popis 2023: nacija, jezik, vjera',c,'Udio u stanovništvu opštine, MONSTAT saopštenje 135/2024'])];
@@ -294,7 +294,7 @@ function openCity(name){
   const ys=[['Hrana',c.food,'food'],['Proizvodnja',c.prod,'prod'],['Zlato (mil. €)',c.gold,'gold'],['Nauka',c.science,'science'],['Kultura',c.culture,'culture'],['Vjera',c.faith,'faith']];
   const W=D.wonders.filter(w=>w.muni===name);
   const pops=[['1991',c.pop1991],['2011',c.pop2011],['2023',c.pop]].filter(p=>p[1]);const pm=Math.max(...pops.map(p=>p[1]));
-  const kv=[['Indeks bogatstva (procjena)','Indeks bogatstva',''],['Neto plata 2025','Neto plata 2025 €',' €'],['Neto plata 01-09.2026','Neto plata 01-09.2026 €',' €'],['Masa zarada po stanovniku','Masa zarada po st. €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost (registrovana)','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2024','Noćenja 2024',''],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2024','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
+  const kv=[['Indeks bogatstva (procjena)','Indeks bogatstva',''],['Neto plata 2025','Neto plata 2025 €',' €'],['Neto plata 01-09.2026','Neto plata 01-09.2026 €',' €'],['Masa zarada po stanovniku','Masa zarada po st. €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost ZZZCG jun 2026','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2025 (ukupno)','Noćenja 2025',''],['Hoteli avg-sep 2026','Hoteli noćenja avg-sep 2026',''],['Rast hotela avg-sep 2026','Rast hotela avg-sep 2026 %','%'],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2025','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
   $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div></div><button class="x" aria-label="Zatvori">×</button></div>
   <div class="body"><div>
    <h3 style="font-size:19px;margin-bottom:8px">Prinosi</h3><div class="yields">${ys.map(([l,v,k])=>`<div class="y" style="background:${YC[k]};${k==='faith'?'color:#1c1a17':''}"><b>${fmt(v,k==='gold'?1:0)}</b><span>${l}</span></div>`).join('')}</div>
@@ -322,9 +322,9 @@ function top(c,n=3,desc=true){return D.table.filter(r=>r[c]!=null).sort((a,b)=>d
 const li=(rows,c,u='',d=1)=>'<ol>'+rows.map(r=>`<li>${esc(r['Opština'])} <span class="num">${fmt(r[c],d)}${u}</span></li>`).join('')+'</ol>';
 function buildAdvisors(){
   const pg=T['Podgorica'],sumW=nat.wagebill_meur,coast=['Bar','Budva','Herceg Novi','Kotor','Tivat','Ulcinj'];
-  const nightsCoast=coast.reduce((a,m)=>a+(T[m]['Noćenja 2024']||0),0);
+  const nightsCoast=coast.reduce((a,m)=>a+(T[m]['Noćenja 2025']||0),0);
   const north=['Andrijevica','Berane','Bijelo Polje','Gusinje','Kolašin','Mojkovac','Petnjica','Plav','Pljevlja','Plužine','Rožaje','Šavnik','Žabljak'];
-  const nU=north.reduce((a,m)=>a+T[m]['Nezaposleni 1/2026'],0),nE=north.reduce((a,m)=>a+T[m]['Zaposleni 2024'],0);
+  const nU=north.reduce((a,m)=>a+T[m]['Nezaposleni 6/2026'],0),nE=north.reduce((a,m)=>a+T[m]['Zaposleni 2024'],0);
   const fg=(nat.firms2025-nat.firms2024)/nat.firms2024*100;
   const sig1=D.table.filter(r=>r['Rast firmi 2024-25 %']>fg&&r['Neto plata 2025 €']<nat.net_wage2025).sort((a,b)=>b['Rast firmi 2024-25 %']-a['Rast firmi 2024-25 %']).slice(0,5);
   const he=nat.higher_share*100;
@@ -333,10 +333,10 @@ function buildAdvisors(){
    ['Ekonomski savjetnik','m:Neto plata 2025 €',`Podgorica nosi ${fmt(pg['Masa zarada mil. €']/sumW*100)}% godišnje mase neto zarada (${fmt(pg['Masa zarada mil. €'])} od ${fmt(sumW)} mil. €), a ima ${fmt(pg['Stanovnici 2023']/nat.pop2023*100)}% stanovnika.`,'Najveća neto plata 2025',li(top('Neto plata 2025 €'),'Neto plata 2025 €',' €',0)],
    ['Savjetnik za privredu','m:Firme na 1.000 st.',`Aktivnih firmi ima ${fmt(nat.firms2025)}, ${fmt(fg,1)}% više nego 2024. Budva ima ${fmt(T['Budva']['Firme na 1.000 st.'])} firmi na 1.000 stanovnika, CG ${fmt(nat.firms2025/nat.pop2023*1000)}.`,'Najbrži rast broja firmi 2024-25',li(top('Rast firmi 2024-25 %'),'Rast firmi 2024-25 %','%')],
    ['Naučni savjetnik','m:Fakultet % (15+)',`Fakultet ima ${fmt(he,1)}% stanovnika 15+. Raspon među opštinama je od ${fmt(top('Fakultet % (15+)',1,false)[0]['Fakultet % (15+)'],1)}% do ${fmt(top('Fakultet % (15+)',1)[0]['Fakultet % (15+)'],1)}%.`,'Najveći udio sa fakultetom',li(top('Fakultet % (15+)'),'Fakultet % (15+)','%')],
-   ['Savjetnik za turizam','m:Noćenja po stanovniku',`Šest primorskih opština ostvarilo je ${fmt(nightsCoast/nat.nights2024*100,1)}% od ${fmt(nat.nights2024)} noćenja 2024. Gusinje, Petnjica i Tuzi nemaju objavljene podatke.`,'Najviše noćenja po stanovniku',li(top('Noćenja po stanovniku'),'Noćenja po stanovniku','',0)],
+   ['Savjetnik za turizam','m:Noćenja po stanovniku',`Šest primorskih opština ostvarilo je ${fmt(nightsCoast/nat.nights2025*100,1)}% od ${fmt(nat.nights2025)} noćenja 2025 (ukupan smještaj). Hoteli su u avgustu i septembru 2026. imali 6-10% više noćenja nego godinu ranije. Petnjica nema objavljen podatak.`,'Najviše noćenja po stanovniku',li(top('Noćenja po stanovniku'),'Noćenja po stanovniku','',0)],
    ['Savjetnik za prostor','m:Sezonski stanovi %',`Od ${fmt(nat.dwellings)} stanova, ${fmt(nat.dwellings_seasonal)} (${fmt(nat.dwellings_seasonal/nat.dwellings*100,1)}%) služi za sezonsko korišćenje (Popis 2023).`,'Najveći udio sezonskih stanova',li(top('Sezonski stanovi %'),'Sezonski stanovi %','%')],
    ['Demografski savjetnik','m:Promjena 1991-2023 %',`Od 1991. do 2023. najviše je izgubio ${esc(top('Promjena 1991-2023 %',1,false)[0]['Opština'])} (${fmt(top('Promjena 1991-2023 %',1,false)[0]['Promjena 1991-2023 %'],1)}%), najviše dobila ${esc(top('Promjena 1991-2023 %',1)[0]['Opština'])} (+${fmt(top('Promjena 1991-2023 %',1)[0]['Promjena 1991-2023 %'],1)}%). Opštine nastale poslije 2011. nemaju poređenje.`,'Najveći pad stanovništva od 1991.',li(top('Promjena 1991-2023 %',3,false),'Promjena 1991-2023 %','%')],
-   ['Savjetnik za rad','m:Nezaposlenost % (reg.)',`Trinaest sjevernih opština ima ${fmt(nU/nat.unemployed_jan2026*100)}% registrovanih nezaposlenih, a ${fmt(nE/nat.employed2024*100)}% zaposlenih CG.`,'Najveća registrovana nezaposlenost',li(top('Nezaposlenost % (reg.)'),'Nezaposlenost % (reg.)','%')],
+   ['Savjetnik za rad','m:Nezaposlenost % (reg.)',`Trinaest sjevernih opština ima ${fmt(nU/nat.unemployed_jun2026*100)}% registrovanih nezaposlenih, a ${fmt(nE/nat.employed2024*100)}% zaposlenih CG.`,'Najveća registrovana nezaposlenost',li(top('Nezaposlenost % (reg.)'),'Nezaposlenost % (reg.)','%')],
    ['Socijalni savjetnik','m:MOP korisnici na 1.000 st.',`Materijalno obezbjeđenje porodice (MOP) je najzastupljenije tamo gdje je nezaposlenost najveća. Ljekara na 10.000 stanovnika najviše ima ${esc(top('Ljekari na 10.000 st.',1)[0]['Opština'])}.`,'Najviše korisnika MOP na 1.000',li(top('MOP korisnici na 1.000 st.'),'MOP korisnici na 1.000 st.','')],
    ['Savjetnik za bogatstvo','m:Indeks bogatstva',`Indeks bogatstva je CG Civ procjena, ne BDP: spaja masu zarada po stanovniku, firme na 1.000, sezonske stanove i fakultet. Plate januar-septembar 2026 najviše su porasle u ${esc(top('Rast plate 2026/2025 %',1)[0]['Opština'])} (+${fmt(top('Rast plate 2026/2025 %',1)[0]['Rast plate 2026/2025 %'],1)}%), a pale u ${esc(top('Rast plate 2026/2025 %',1,false)[0]['Opština'])} (${fmt(top('Rast plate 2026/2025 %',1,false)[0]['Rast plate 2026/2025 %'],1)}%).`,'Najveći indeks bogatstva',li(top('Indeks bogatstva'),'Indeks bogatstva','',2)],
    ['Savjetnik za narode i jezike','cat:_nacija',`Prema Popisu 2023, najbrojnija grupa u opštini su Crnogorci u ${D.table.filter(r=>r._nacija==='Crnogorci').length}, Srbi u ${D.table.filter(r=>r._nacija==='Srbi').length}, Bošnjaci u ${D.table.filter(r=>r._nacija==='Bošnjaci').length} i Albanci u ${D.table.filter(r=>r._nacija==='Albanci').length} opština. Srpski je najčešći jezik u govoru u ${D.table.filter(r=>r._jezik==='Srpski').length} od 25 opština.`,'Najveći udio Rusa (Popis 2023)',li(top('Rusi %'),'Rusi %','%')],
@@ -387,7 +387,8 @@ function buildSources(){
   <p><b>Distrikti i čuda</b> se dodjeljuju po objavljenim pravilima, vidljivim u pogledu grada. Čuda su 20 objekata u CG sa najviše jezičkih verzija na Wikipediji (Wikidata, novembar 2026), bez rijeka, jezika i regiona.</p>
   <p><b>Bogatstvo</b> je CG Civ procjena: prosjek standardizovanih vrijednosti mase zarada po stanovniku, firmi na 1.000 stanovnika, udjela sezonskih stanova i udjela sa fakultetom. Plata 2026 je MONSTAT prosjek januar-septembar 2026 (Mjesečni statistički pregled 10/2026).</p>
   <p><b>Nacija, jezik i vjera</b> su udjeli iz Popisa 2023 prema slobodnom izjašnjavanju (MONSTAT, saopštenje 135/2024). Mapa ih prikazuje bez tumačenja.</p>
-  <p><b>Kontrola zbirova:</b> stanovnici ${fmt(nat.pop2023)}, zaposleni ${fmt(nat.employed2024)}, nezaposleni ${fmt(nat.unemployed_jan2026)}, firme ${fmt(nat.firms2025)}, studenti ${fmt(nat.students2024)} - jednako zvaničnim ukupnim brojevima.</p>
+  <p><b>Najnoviji podaci (26.11.2026):</b> turizam ukupno 2025 po opštinama (MONSTAT saopštenje 27/2026), hoteli avgust i septembar 2026 prema 2025 (MONSTAT mjesečna saopštenja, kolektivni smještaj; Andrijevica, Gusinje, Petnjica, Plav, Plužine, Šavnik, Tuzi i Zeta se ne objavljuju zbog povjerljivosti), registrovani nezaposleni i stopa ZZZCG na 30.6.2026 (polugodišnji izvještaj), prirodni priraštaj 2025 (MONSTAT saopštenje 59/2026).</p>
+  <p><b>Kontrola zbirova:</b> stanovnici ${fmt(nat.pop2023)}, zaposleni ${fmt(nat.employed2024)}, nezaposleni ${fmt(nat.unemployed_jun2026)}, firme ${fmt(nat.firms2025)}, studenti ${fmt(nat.students2024)} - jednako zvaničnim ukupnim brojevima.</p>
   <h3 style="font-size:20px;margin-top:16px">Zvanični izvori po polju</h3>
   <ul>${Object.entries(S).map(([src,f])=>`<li>${esc(src)} <span class="muted">(${f.map(esc).join(', ')})</span></li>`).join('')}</ul>
   <h3 style="font-size:20px;margin-top:16px">Prostorni i otvoreni izvori</h3>

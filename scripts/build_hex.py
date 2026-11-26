@@ -19,6 +19,11 @@ to_ll = Transformer.from_crs(UTM, 'EPSG:4326', always_xy=True)
 
 stats = json.load(open(os.path.join(BUILD, 'muni_stats.json')))
 M = stats['munis']
+U26 = json.load(open(os.path.join(BUILD, 'update2026.json')))
+for _m, _u in U26.items():
+    M[_m]['nights2025'] = _u['nights2025']; M[_m]['unemployed_jun2026'] = _u['unemp']; M[_m]['zzz_rate_jun2026'] = _u['rate']
+    M[_m]['natural_increase_rate'] = _u['nat_inc2025']
+    M[_m]['hotel_as2026'] = _u['hotel_nights_as2026']; M[_m]['hotel_growth'] = _u['hotel_growth']
 MUNIS = list(M.keys())
 
 def muni_name(raw):
@@ -165,7 +170,7 @@ def spread(field, weight, out):
         tw = sum(weight(h) for h in hs)
         for h in hs:
             h[out] = (v or 0) * weight(h) / tw if tw else 0
-spread('nights2024', lambda h: h['lodging'] * 3 + h['pop'] / 1000, 'nights')
+spread('nights2025', lambda h: h['lodging'] * 3 + h['pop'] / 1000, 'nights')
 spread('firms2025', lambda h: h['pop'], 'firms')
 spread('higher_ed', lambda h: h['pop'], 'higher')
 for m in MUNIS:
@@ -199,8 +204,8 @@ SEATS = {'Podgorica': (19.2594, 42.4304), 'Nikšić': (18.9445, 42.7731), 'Bar':
          'Plav': (19.9456, 42.5967), 'Kolašin': (19.5222, 42.8222), 'Mojkovac': (19.5833, 42.9600), 'Petnjica': (19.9644, 42.9089),
          'Gusinje': (19.8339, 42.5619), 'Andrijevica': (19.7919, 42.7339), 'Žabljak': (19.1233, 43.1542), 'Plužine': (18.8394, 43.1528),
          'Šavnik': (19.0967, 42.9564)}
-nat = {k: sum((M[m].get(k) or 0) for m in MUNIS) for k in ['pop2023', 'employed2024', 'unemployed_jan2026', 'higher_ed', 'pop15plus',
-                                                             'nights2024', 'students2024', 'firms2025', 'firms2024', 'dwellings', 'dwellings_seasonal', 'wagebill_meur']}
+nat = {k: sum((M[m].get(k) or 0) for m in MUNIS) for k in ['pop2023', 'employed2024', 'unemployed_jun2026', 'higher_ed', 'pop15plus',
+                                                             'nights2025', 'students2024', 'firms2025', 'firms2024', 'dwellings', 'dwellings_seasonal', 'wagebill_meur']}
 nat['net_wage2025'] = 1012   # MONSTAT, prosječna neto zarada CG 2025 (saopštenje 8/2026)
 nat['higher_share'] = nat['higher_ed'] / nat['pop15plus']
 nat['prog_pct'] = 11.33
@@ -246,8 +251,8 @@ for m in MUNIS:
     fp = s['firms2025'] / s['pop2023'] * 1000; nfp = nat['firms2025'] / nat['pop2023'] * 1000
     if fp >= nfp * 1.3: d.append(('Berza i preduzetništvo', f'{fp:.0f} aktivnih firmi na 1.000 stanovnika (CG {nfp:.0f})'))
     if m in PORT_MUNIS: d.append(('Luka', 'luka u MONSTAT tabeli 28-14 (2024)'))
-    npc = (s.get('nights2024') or 0) / s['pop2023']
-    if npc >= 20: d.append(('Ljetovalište', f'{npc:.0f} noćenja po stanovniku 2024'))
+    npc = (s.get('nights2025') or 0) / s['pop2023']
+    if npc >= 20: d.append(('Ljetovalište', f'{npc:.0f} noćenja po stanovniku 2025'))
     mw = sum(x['mw'] for x in hs)
     if mw >= 100: d.append(('Industrijska zona', f'elektrane {mw:.0f} MW (Wikidata)'))
     her = sum(x['heritage'] for x in hs)
@@ -260,7 +265,7 @@ for m in MUNIS:
     sea = (s.get('dwellings_seasonal') or 0) / s['dwellings'] * 100
     if sea >= 35: d.append(('Kvart vikendica', f'{sea:.0f}% stanova za sezonsko korišćenje'))
     if m in NP: d.append(('Rezervat', f'nacionalni park {NP[m]}'))
-    labour = s['employed2024'] + s['unemployed_jan2026']
+    labour = s['employed2024'] + s['unemployed_jun2026']
     he = s['higher_ed'] / s['pop15plus']
     cities.append(dict(
         name=m, q=h['q'], r=h['r'], lon=lon, lat=lat, pop=s['pop2023'], pop1991=s.get('pop1991'), pop2011=s.get('pop2011'), districts=[{'n': a, 'why': b} for a, b in d],
@@ -269,7 +274,7 @@ for m in MUNIS:
         hexes=len(hs), area_km2=round(len(hs) * 7.96),
         citizens=dict(higher_share=round(he * 100, 1), one_in=round(1 / he, 1) if he else None,
                       nat_one_in=round(1 / nat['higher_share'], 1), prog=s['programming_pct'],
-                      unemp_share=round(s['unemployed_jan2026'] / labour * 100, 1),
+                      unemp_share=round(s['unemployed_jun2026'] / labour * 100, 1),
                       age65=round(s['age65plus'] / s['pop2023'] * 100, 1), age0_14=round(s['age0_14'] / s['pop2023'] * 100, 1)),
     ))
 
@@ -287,16 +292,18 @@ for m in MUNIS:
         'Masa zarada mil. €': round(s['wagebill_meur'], 1),
         'Zaposleni 2024': s['employed2024'],
         'Zaposleni na 100 st.': per(s['employed2024'], s['pop2023'], 100),
-        'Nezaposleni 1/2026': s['unemployed_jan2026'],
-        'Nezaposlenost % (reg.)': per(s['unemployed_jan2026'], s['employed2024'] + s['unemployed_jan2026'], 100),
+        'Nezaposleni 6/2026': s['unemployed_jun2026'],
+        'Nezaposlenost % (reg.)': s['zzz_rate_jun2026'],
         'Firme 2025': s['firms2025'],
         'Firme na 1.000 st.': per(s['firms2025'], s['pop2023'], 1000),
         'Rast firmi 2024-25 %': per(s['firms2025'] - s['firms2024'], s['firms2024'], 100),
         'Fakultet % (15+)': per(s['higher_ed'], s['pop15plus'], 100),
         'Programiranje %': s['programming_pct'],
         'Studenti na 1.000 st.': per(s['students2024'], s['pop2023'], 1000),
-        'Noćenja 2024': s.get('nights2024'),
-        'Noćenja po stanovniku': per(s.get('nights2024'), s['pop2023']),
+        'Noćenja 2025': s.get('nights2025'),
+        'Hoteli noćenja avg-sep 2026': s.get('hotel_as2026'),
+        'Rast hotela avg-sep 2026 %': s.get('hotel_growth'),
+        'Noćenja po stanovniku': per(s.get('nights2025'), s['pop2023']),
         'Sezonski stanovi %': per(s['dwellings_seasonal'], s['dwellings'], 100),
         'Prirodni priraštaj ‰': s['natural_increase_rate'],
         '65+ %': per(s['age65plus'], s['pop2023'], 100),

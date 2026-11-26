@@ -12,7 +12,7 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 |---|---|
 | ![Pogled grada Kotor](docs/pogled-grada.png) | ![Najbrojnija nacija po opštinama](docs/nacije.png) |
 
-Trejler (25 s): [docs/cg-civ-trailer.mp4](docs/cg-civ-trailer.mp4)
+Kratki video (13 s, originalna muzika): [docs/cg-civ-kratki.mp4](docs/cg-civ-kratki.mp4) · trejler (25 s): [docs/cg-civ-trailer.mp4](docs/cg-civ-trailer.mp4)
 
 Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me
 
@@ -45,7 +45,9 @@ Brojke opština raspoređene su po heksovima prema naseljenosti (Kontur). Noćen
 - MONSTAT, Mjesečni statistički pregled 10/2026, str. 29: prosječna neto zarada po opštinama, Ø 2025 i Ø januar-septembar 2026
 - MONSTAT, Popis 2023, saopštenje 135/2024: nacionalna pripadnost, vjera, maternji jezik i jezik kojim se govori, po opštinama
 - MONSTAT, Broj i struktura poslovnih subjekata u CG (2026): aktivni subjekti 2024 i 2025
-- ZZZCG, bilten 1/2026: registrovani nezaposleni po opštinama, 31.1.2026.
+- ZZZCG, polugodišnji izvještaj 2026: registrovani nezaposleni i stopa po opštinama, 30.6.2026.
+- MONSTAT, Dolasci i noćenja turista ukupno 2025 (saopštenje 27/2026) i mjesečna saopštenja avgust i septembar 2025/2026 (kolektivni smještaj)
+- MONSTAT, Procjene stanovništva i osnovni demografski pokazatelji 2025 (saopštenje 59/2026): prirodni priraštaj
 - Kontur Boundaries i Kontur Population ME 2023 (CC BY 4.0)
 - Terrarium visinske pločice (AWS Open Data / Mapzen)
 - Natural Earth (javno dobro)
@@ -68,6 +70,7 @@ pip install geopandas shapely pyogrio pdfplumber pillow pyproj
 python3 scripts/fetch_wikidata.py     # Wikidata tačke
 python3 scripts/extract_stats.py      # MONSTAT / ZZZCG PDF -> build/muni_stats.json
 python3 scripts/extract_popis2.py     # Popis 2023: nacija, jezik, vjera -> build/popis2.json
+python3 scripts/extract_2026.py       # turizam 2025/2026, nezaposleni 6/2026, priraštaj 2025
 python3 scripts/build_hex.py          # heks mreža -> build/cgciv.json
 cp build/cgciv.json site/
 ```
@@ -75,6 +78,6 @@ cp build/cgciv.json site/
 ## Ograničenja
 
 - Teren je izveden iz reljefa, nema sloja pokrivača tla (šume, njive).
-- Gusinje, Petnjica i Tuzi nemaju objavljene podatke o turizmu.
+- Petnjica nema objavljen turizam za 2025; mjesečni hotelski podaci za 8 malih opština se ne objavljuju (povjerljivost).
 - Zdravstveni radnici nijesu objavljeni za Gusinje, Petnjicu, Tuzi i Zetu.
 - Plate po opštinama očitane su sa slike tabele u biltenu, pa ih treba provjeriti pri svakom ažuriranju.
