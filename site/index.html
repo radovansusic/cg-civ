@@ -144,7 +144,7 @@ header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;
       <button role="tab" data-t="explorer" aria-selected="false">Istraživač</button>
       <button role="tab" data-t="sources" aria-selected="false">Izvori</button>
     </div>
-    <div class="pane" id="p-lenses"><p class="muted">Klik na grad otvara pogled grada. Klik na heks pokazuje njegove brojke. Prevuci i zumiraj.</p><div id="lensList"></div><div id="hexInfo"></div></div>
+    <div class="pane" id="p-lenses"><p class="muted">Pređi mišem preko opštine za njen barjak, klikni grad za pogled grada. Sočivo na mapi pokazuje vrijednost svake opštine umjesto imena. Prevuci i zumiraj.</p><div id="lensList"></div><div id="hexInfo"></div></div>
     <div class="pane" id="p-advisors" hidden></div>
     <div class="pane" id="p-explorer" hidden>
       <label class="sel" for="ex">Osa X</label><select id="ex"></select>
@@ -166,11 +166,11 @@ const fmt=(v,d=0)=>v==null||isNaN(v)?'-':Number(v).toLocaleString('sr-Latn-ME',{
 const SQ3=Math.sqrt(3);
 const TERR={plains:['#c8bf78','Ravnica'],grassland:['#93b35e','Livade i polja'],hills:['#6e8c4b','Brda'],mountain:['#8b8272','Planine'],peak:['#ece9e2','Vrhovi iznad 2.100 m'],lake:['#3d7ea8','Jezero'],sea:['#1c4f74','More']};
 const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture:'#8a4bb0',faith:'#e0d7c3'};
-let touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
+let hov=null,touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
 const cv=$('#map');let cx=cv.getContext('2d');const CX0=cx;
 
-let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=5'}
-Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=5').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
+let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=6'}
+Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=6').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
 
 function init(){
   hexes=D.hexes;nat=D.meta.nat;
@@ -445,15 +445,15 @@ function overlay(W,H){
     cx.fillStyle=c.n==='JADRANSKO MORE'?'rgba(170,215,235,.55)':kim?'rgba(225,228,232,.55)':'rgba(225,228,232,.5)';cx.fillText(c.n,x,y);if(kim)cx.restore()}try{cx.letterSpacing='0px'}catch(e){}cx.textBaseline='alphabetic'}
   {const P=V.prevlaka,x=P.p[0]*s+tx,y=P.p[1]*s+ty,z=Math.max(6,Math.min(16,s*.55));P._xy=[x,y,z+4];
     cx.setLineDash([3,3]);cx.strokeStyle='#ffb347';cx.lineWidth=2;cx.beginPath();cx.arc(x,y,z,0,7);cx.stroke();cx.setLineDash([]);
-    if(s>5){cx.font=`italic 700 ${Math.max(11,Math.min(14,s*.5))}px Caladea,serif`;cx.textAlign='right';cx.lineWidth=3;cx.strokeStyle='rgba(10,10,10,.85)';
+    if(s>11){cx.font=`italic 700 ${Math.max(11,Math.min(14,s*.5))}px Caladea,serif`;cx.textAlign='right';cx.lineWidth=3;cx.strokeStyle='rgba(10,10,10,.85)';
       const t='Prevlaka · granica nije konačno utvrđena';cx.strokeText(t,x-z-4,y+4);cx.fillStyle='#ffcf8a';cx.fillText(t,x-z-4,y+4)}}
   // 8. imena opština (srednji zum, ne preko barjaka)
   const BB=bannerLayout(W,H);
-  if(s>8.5&&s<30){cx.textAlign='center';cx.textBaseline='middle';
+  if(terr&&s>11&&s<30){cx.textAlign='center';cx.textBaseline='middle';
     for(const L of V.labels){const x=L.p[0]*s+tx,y=L.p[1]*s+ty;if(x<0||y<0||x>W||y>H)continue;
       const fs=Math.max(12,Math.min(30,s*(.7+Math.sqrt(L.a)/30)));cx.font=`700 ${fs}px Caladea,Georgia,serif`;try{cx.letterSpacing=(fs*.18)+'px'}catch(e){}
       const lw=cx.measureText(L.n.toUpperCase()).width;if(BB.some(b=>x-lw/2<b.bx+b.bw&&x+lw/2>b.bx&&y-fs/2<b.by+b.bh&&y+fs/2>b.by))continue;
-      cx.lineWidth=3;cx.strokeStyle='rgba(20,25,20,.35)';cx.strokeText(L.n.toUpperCase(),x,y);cx.fillStyle=terr?'rgba(255,248,225,.62)':'rgba(255,255,255,.7)';cx.fillText(L.n.toUpperCase(),x,y)}
+      cx.lineWidth=3;cx.strokeStyle='rgba(20,25,20,.35)';cx.strokeText(L.n.toUpperCase(),x,y);cx.fillStyle='rgba(255,248,225,.42)';cx.fillText(L.n.toUpperCase(),x,y)}
     try{cx.letterSpacing='0px'}catch(e){}cx.textBaseline='alphabetic'}
   // 9. elektrane
   for(const p of D.power){const x=SQ3*(p.q+p.r/2)*s+tx,y=-1.5*p.r*s+ty,z=Math.max(6,s*.42);if(x<-z||y<-z||x>W+z||y>H+z)continue;
@@ -462,13 +462,27 @@ function overlay(W,H){
   // 10. čuda
   for(const h of V.holy)h._xy=null;
   const placed=[],HS=new Set(V.holy.filter(h=>h.star).map(h=>h.n));const HL2=drawHoly(W,H,placed);for(const w of D.wonders){if(showHoly&&HS.has(w.name))continue;const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(6,s*.5);if(x<-40||y<-40||x>W+40||y>H+40)continue;medal(x,y,z);
-    if(s<8.5)continue;const fs=Math.max(11,Math.min(14,s*.55));cx.font=`italic 700 ${fs}px Caladea,serif`;const lw=cx.measureText(w.name).width;
+    if(s<20)continue;const fs=Math.max(11,Math.min(14,s*.5));cx.font=`italic 700 ${fs}px Caladea,serif`;const lw=cx.measureText(w.name).width;
     if(placed.some(p=>Math.abs(p[0]-x)<(p[2]+lw)/2+6&&Math.abs(p[1]-y)<fs+4))continue;placed.push([x,y,lw]);
     cx.textAlign='center';cx.fillStyle='#ffe9a8';cx.strokeStyle='rgba(10,10,10,.8)';cx.lineWidth=3;cx.strokeText(w.name,x,y+z+fs);cx.fillText(w.name,x,y+z+fs)}
   HL2.forEach(f=>f());
-  // 11. gradski barjaci
-  for(const{c,x,y,fs,bh,popT,wp,nm,wn,ds,star,bw,bx,by}of BB){
-    const [c1,c2]=regCol(c.name);
+  // 10c. vrijednosti sočiva po opštini (podatak umjesto imena)
+  if(!terr){const vals=muniVals();cx.textAlign='center';cx.textBaseline='middle';
+    for(const L of V.labels){const v=vals[L.n];if(v==null)continue;const x=L.p[0]*s+tx,y=L.p[1]*s+ty;if(x<-60||y<-20||x>W+60||y>H+20)continue;
+      const fs=Math.max(11,Math.min(16,s*.55+4));cx.font=`700 ${fs}px Carlito,sans-serif`;const t=v.t,w=cx.measureText(t).width+14,hh=fs+8;
+      cx.fillStyle=L.n===hov||L.n===sel?'rgba(40,30,10,.92)':'rgba(10,18,26,.78)';rr(x-w/2,y-hh/2,w,hh,hh/2);cx.fill();
+      cx.strokeStyle=L.n===hov||L.n===sel?'#ffd166':'rgba(255,255,255,.35)';cx.lineWidth=1;rr(x-w/2,y-hh/2,w,hh,hh/2);cx.stroke();
+      cx.fillStyle='#fff';cx.fillText(t,x,y+1)}cx.textBaseline='alphabetic'}
+  // 10d. obris opštine pod mišem
+  if(hov&&hov!==sel){const hp=new Path2D();for(const h of hexes){if(h.muni!==hov)continue;const x=h.px*s+tx,y=h.py*s+ty;
+    for(const[a,b]of NB){const n=byKey[(h.q+a)+','+(h.r+b)];if(n&&n.muni===hov)continue;const e=edgePts(x,y,a,b,s);hp.moveTo(e[0],e[1]);hp.lineTo(e[2],e[3])}}
+    cx.strokeStyle='rgba(255,220,140,.75)';cx.lineWidth=Math.max(1.5,s*.12);cx.stroke(hp)}
+  // 11. gradski barjaci: tihi natpis, pun barjak na prelaz mišem ili izbor
+  for(const B of BB){const{c,x,y,fs,bh,bw,bx,by,nm}=B;const [c1,c2]=regCol(c.name);
+    if(!B.F){if(!terr)continue;cx.globalAlpha=.92;cx.fillStyle='rgba(10,18,26,.6)';rr(bx,by,bw,bh,bh/2);cx.fill();
+      cx.fillStyle=c1;cx.beginPath();cx.arc(bx+8,by+bh/2,3,0,7);cx.fill();
+      cx.font=`600 ${fs}px Caladea,serif`;cx.textBaseline='middle';cx.textAlign='left';cx.fillStyle='#efe6cf';cx.fillText(nm,bx+14,by+bh/2+1);cx.textBaseline='alphabetic';cx.globalAlpha=1;continue}
+    const{popT,wp,wn,ds,star}=B;
     cx.save();cx.shadowColor='rgba(0,0,0,.55)';cx.shadowBlur=6;cx.shadowOffsetY=2;
     const gb=cx.createLinearGradient(0,by,0,by+bh);gb.addColorStop(0,'#263646');gb.addColorStop(1,'#121d28');cx.fillStyle=gb;rr(bx,by,bw,bh,bh/2);cx.fill();cx.restore();
     cx.strokeStyle=c.name===sel?'#ffd166':'#b8913f';cx.lineWidth=c.name===sel?2:1.2;rr(bx,by,bw,bh,bh/2);cx.stroke();
@@ -490,16 +504,19 @@ function overlay(W,H){
   legend();mini();
 }
 function bannerLayout(W,H){
-  const out=[],R=s;const pri=c=>c.name==='Podgorica'?1e9:c.name==='Cetinje'?9e8:c.pop;
+  const out=[],R=s;const full=c=>c.name===sel||c.name===hov;const pri=c=>full(c)?2e9:c.name==='Podgorica'?1e9:c.name==='Cetinje'?9e8:c.pop;
   const cities=[...D.cities].sort((a,b)=>pri(b)-pri(a));
   for(const c of cities){const x=SQ3*(c.q+c.r/2)*s+tx,y=-1.5*c.r*s+ty;if(x<-200||y<-60||x>W+200||y>H+60)continue;
-    const fs=Math.max(10.5,Math.min(15,s*.62+5)),bh=fs+9,popT=c.pop>=1e5?fmt(c.pop/1000)+'k':fmt(c.pop/1000,c.pop<1e4?1:0)+'k';
-    cx.font=`700 ${fs-1}px Carlito,sans-serif`;const wp=cx.measureText(popT).width+12;
-    cx.font=`700 ${fs}px Caladea,serif`;try{cx.letterSpacing='1px'}catch(e){}const nm=c.name.toUpperCase(),wn=cx.measureText(nm).width+14;try{cx.letterSpacing='0px'}catch(e){}
-    const ds=c.districts.slice(0,4),wd=ds.length?ds.length*(fs*.62)+6:0,star=c.name==='Podgorica'||c.name==='Cetinje'?fs:0,bw=wp+wn+wd+star;
-    const cand=[[-bw/2,-R*.9-bh],[-bw/2,R*.85],[-bw+R,-R*.9-bh],[-R,R*.85],[-R,-R*.9-bh],[-bw+R,R*.85],[-bw/2,-R*.9-2*bh-2],[-bw/2,R*.85+bh+2]];
+    const F=full(c);let o;
+    if(F){const fs=Math.max(11.5,Math.min(15,s*.62+5)),bh=fs+9,popT=c.pop>=1e5?fmt(c.pop/1000)+'k':fmt(c.pop/1000,c.pop<1e4?1:0)+'k';
+      cx.font=`700 ${fs-1}px Carlito,sans-serif`;const wp=cx.measureText(popT).width+12;
+      cx.font=`700 ${fs}px Caladea,serif`;try{cx.letterSpacing='1px'}catch(e){}const nm=c.name.toUpperCase(),wn=cx.measureText(nm).width+14;try{cx.letterSpacing='0px'}catch(e){}
+      const ds=c.districts.slice(0,4),wd=ds.length?ds.length*(fs*.62)+6:0,star=c.name==='Podgorica'||c.name==='Cetinje'?fs:0;o={F,fs,bh,popT,wp,nm,wn,ds,star,bw:wp+wn+wd+star}}
+    else{const fs=Math.max(10,Math.min(13,s*.4+6)),bh=fs+6;cx.font=`600 ${fs}px Caladea,serif`;const nm=c.name,wn=cx.measureText(nm).width;o={F,fs,bh,nm,wn,bw:wn+18}}
+    const bw=o.bw,bh=o.bh;
+    const cand=F?[[-bw/2,-R*.9-bh],[-bw/2,R*.85],[-bw+R,-R*.9-bh],[-R,R*.85]]:[[-bw/2,R*.55],[-bw/2,-R*.6-bh],[-bw+R*.5,R*.55],[-R*.5,R*.55],[-bw/2,R*.55+bh+2]];
     let ok=null;for(const[dx,dy]of cand){const bx=x+dx,by=y+dy;if(!out.some(b=>bx<b.bx+b.bw+3&&bx+bw>b.bx-3&&by<b.by+b.bh+2&&by+bh>b.by-2)){ok=[bx,by];break}}
-    if(!ok)continue;out.push({c,x,y,fs,bh,popT,wp,nm,wn,ds,star,bw,bx:ok[0],by:ok[1]})}
+    if(!ok)continue;out.push(Object.assign(o,{c,x,y,bx:ok[0],by:ok[1]}))}
   return out;
 }
 function rr(x,y,w,h,r){r=Math.min(r,h/2,w/2);cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
@@ -529,7 +546,7 @@ function drawHoly(W,H,placed){
   const later=[];if(!showHoly)return later;const list=V.holy.filter(holyVisible);
   for(const h of [...list].reverse()){const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=h.star?Math.max(8,Math.min(15,s*.62)):Math.max(5.5,Math.min(11,s*.42));if(x<-30||y<-30||x>W+30||y>H+30)continue;
     h._xy=[x,y,z];later.push(()=>holyBadge(x,y,z,h.k,h.star))}
-  for(const h of list){if(!h._xy)continue;const[x,y,z]=h._xy;if(!(h.star&&s>5.5)&&!(s>24))continue;
+  for(const h of list){if(!h._xy)continue;const[x,y,z]=h._xy;if(!(h.star&&s>14)&&!(s>26))continue;
     const fs=h.star?Math.max(11,Math.min(14,s*.55)):Math.max(10,Math.min(12,s*.4)),t=h.n;cx.font=`italic 700 ${fs}px Caladea,serif`;const lw=cx.measureText(t).width;
     if(placed.some(p=>Math.abs(p[0]-x)<(p[2]+lw)/2+6&&Math.abs(p[1]-(y+z+fs))<fs+3))continue;placed.push([x,y+z+fs,lw]);
     later.push(()=>{cx.font=`italic 700 ${fs}px Caladea,serif`;cx.textAlign='center';cx.strokeStyle='rgba(10,10,10,.85)';cx.lineWidth=3;cx.strokeText(t,x,y+z+fs);cx.fillStyle=h.star?'#fff1c8':'#efe6d0';cx.fillText(t,x,y+z+fs)})}
@@ -549,6 +566,13 @@ function buildSearch(){
 ['#myth .mlab','#myth .core'].forEach(q=>document.querySelector(q).addEventListener('click',e=>{const h=V.holy.find(x=>x.id==='Q13424615'),t=$('#tip'),r=cv.getBoundingClientRect(),b=e.target.getBoundingClientRect();
   t.innerHTML=`<b>Lovćen: Njegoševa kapela i mauzolej</b><br>${esc(h.note)}<br><span style="color:#9fb1bd">Sveto i memorijalno mjesto, ${h.sl} jezika na Wikipediji</span>`;t.style.display='block';
   t.style.left=Math.min(b.left-r.left,r.width-270)+'px';t.style.top=(b.bottom-r.top+8)+'px'}));
+let MVC={};
+function muniVals(){if(MVC.k===lens)return MVC.v;const v={};
+  if(CATS[lens]){for(const r of D.table)v[r['Opština']]={t:r[lens.slice(4)]||'-'}}
+  else if(lens.startsWith('m:')){const c=lens.slice(2),u=c.includes('€')?' €':c.includes('%')?'%':c.includes('‰')?'‰':'';const f1=x=>Math.abs(x)<10?(Math.abs(x)<.05?0:x).toLocaleString('sr-Latn-ME',{minimumFractionDigits:1,maximumFractionDigits:1}):fmt(x);for(const r of D.table)if(r[c]!=null)v[r['Opština']]={t:f1(r[c])+u}}
+  else{const o=HL[lens];if(o&&o.v){const agg={},cnt={};for(const h of hexes){if(!h.muni)continue;const x=o.v(h);if(x==null)continue;agg[h.muni]=(agg[h.muni]||0)+x;cnt[h.muni]=(cnt[h.muni]||0)+1}
+    for(const m in agg){const val=lens==='elev'?agg[m]/cnt[m]:agg[m];v[m]={t:lens==='elev'?fmt(val)+' m':lens==='gold'?fmt(val,0)+' mil. €':val>=1e6?fmt(val/1e6,1)+' mil.':val>=1e4?fmt(val/1e3,0)+'k':fmt(val)}}}}
+  MVC={k:lens,v};return v}
 /* pregledna mapa */
 let miniImg=null,miniT=null;
 function mini(){
@@ -574,10 +598,11 @@ cv.addEventListener('pointermove',e=>{
   if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,[e.offsetX,e.offsetY]);
   if(pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,pinch.s*d/pinch.d/s);moved=9;return}
   if(drag&&ptrs.size===1){touched=true;tx=drag[2]+e.offsetX-drag[0];ty=drag[3]+e.offsetY-drag[1];moved+=Math.abs(e.movementX)+Math.abs(e.movementY);draw();$('#tip').style.display='none';return}
+  {const hh=pick(e.offsetX,e.offsetY),m=hh&&hh.muni||null;if(m!==hov){hov=m;draw()}}
   tip(e.offsetX,e.offsetY)});
 cv.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;cv.style.cursor='grab';
   if(drag&&moved<6){const h=pick(e.offsetX,e.offsetY);if(h){const c=cityByKey[h.q+','+h.r];if(c)openCity(c.name);else hexInfo(h)}}drag=null});
-cv.addEventListener('pointerleave',()=>$('#tip').style.display='none');
+cv.addEventListener('pointerleave',()=>{$('#tip').style.display='none';if(hov){hov=null;draw()}});
 cv.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*.0015))},{passive:false});
 function zoomAt(x,y,f){touched=true;const ns=Math.max(3,Math.min(80,s*f));f=ns/s;tx=x-(x-tx)*f;ty=y-(y-ty)*f;s=ns;draw()}
 $('#zin').onclick=()=>{const r=cv.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.4)};
