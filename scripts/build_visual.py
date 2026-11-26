@@ -255,7 +255,7 @@ print('kopnena granica', len(border), sum(len(b) for b in border))
 
 def U(lon, lat): return unit(*to_utm.transform(lon, lat))
 countries = [dict(n='HRVATSKA', p=U(18.33, 42.6)), dict(n='BOSNA I HERCEGOVINA', p=U(18.45, 43.2)), dict(n='SRBIJA', p=U(19.95, 43.35)),
-             dict(n='KOSOVO', p=U(20.45, 42.72)), dict(n='ALBANIJA', p=U(19.75, 42.15)), dict(n='JADRANSKO MORE', p=U(18.85, 42.0))]
+             dict(n='KOSOVO I METOHIJA', p=U(20.5, 42.68)), dict(n='ALBANIJA', p=U(19.75, 42.15)), dict(n='JADRANSKO MORE', p=U(18.85, 42.0))]
 prevlaka = dict(n='Prevlaka', p=U(18.5372, 42.3958),
     note='Po Privremenom protokolu iz 2002. kopneni dio poluostrva i pojas mora na ulazu u Boku od oko 550 m pripadaju Hrvatskoj, a dio akvatorija uz poluostrvo nije razgraničen. Crna Gora smatra pitanje granice na kopnu i moru otvorenim; konačno razgraničenje nije završeno.')
 
