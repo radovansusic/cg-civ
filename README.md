@@ -8,18 +8,20 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 
 ![CG Civ - mapa terena sa gradovima i čudima](docs/mapa.png)
 
-| Pogled grada | Istraživač |
+| Pogled grada | Najbrojnija nacija (Popis 2023) |
 |---|---|
-| ![Pogled grada Kotor](docs/pogled-grada.png) | ![Istraživač: fakultet i plata po opštinama](docs/istrazivac.png) |
+| ![Pogled grada Kotor](docs/pogled-grada.png) | ![Najbrojnija nacija po opštinama](docs/nacije.png) |
 
-Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me · X: [@SchuleDR](https://x.com/SchuleDR)
+Trejler (25 s): [docs/cg-civ-trailer.mp4](docs/cg-civ-trailer.mp4)
+
+Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me
 
 ## Šta ima
 
 - **Mapa:** teren izveden iz reljefa, gradovi (sjedišta opština), 20 čuda, elektrane.
-- **24 sočiva:** 10 prinosa po heksu (zlato, proizvodnja, nauka, kultura, vjera, hrana, stanovnici, noćenja, reljef, teren) i 14 pokazatelja po opštini (plata, nezaposlenost, firme, rast firmi, fakultet, programiranje, turizam, vikendice, demografija, socijala, ljekari, gustina).
+- **46 sočiva:** 10 prinosa po heksu (zlato, proizvodnja, nauka, kultura, vjera, hrana, stanovnici, noćenja, reljef, teren), 4 sočiva bogatstva (indeks bogatstva, masa zarada po stanovniku, plata januar-septembar 2026, rast plate), 14 pokazatelja po opštini i 18 sočiva iz Popisa 2023 (najbrojnija nacija, najčešći jezik, udjeli nacija, jezika i vjera).
 - **Pogled grada** za 25 opština: prinosi, distrikti po objavljenim pravilima, građani, popisi 1991-2011-2023, rang među opštinama.
-- **9 savjetnika:** nalazi izračunati iz podataka, uz dugme koje pali odgovarajuće sočivo.
+- **11 savjetnika:** nalazi izračunati iz podataka, uz dugme koje pali odgovarajuće sočivo.
 - **Istraživač:** bilo koja dva pokazatelja kao dijagram rasipanja sa korelacijom, plus tabela svih opština povezana sa mapom.
 
 ## Jezik Civilizacije
@@ -31,6 +33,7 @@ Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule
 | Nauka | Stanovnici sa fakultetom, Popis 2023 (1 po 300) |
 | Kultura | Objekti baštine u OSM + noćenja 2024 (1 po 25.000) |
 | Vjera | Broj bogomolja u OSM, bez podjele po vjeri |
+| Bogatstvo | CG Civ procjena, nije BDP: prosjek z-vrijednosti mase zarada po stanovniku, firmi na 1.000, sezonskih stanova i udjela sa fakultetom |
 | Hrana | Pravilo igre po terenu, +1 uz more i jezero |
 
 Brojke opština raspoređene su po heksovima prema naseljenosti (Kontur). Noćenja su raspoređena prema smještajnim objektima (OSM). Zbir po opštini uvijek je jednak zvaničnom podatku.
@@ -39,7 +42,8 @@ Brojke opština raspoređene su po heksovima prema naseljenosti (Kontur). Noćen
 
 - MONSTAT, Statistički godišnjak 2025, pogl. 28 (stanovništvo 1948-2023, demografija 2024, zaposleni 2024, turizam 2024, luke, škole, studenti, zdravstvo, MOP)
 - MONSTAT, Popis 2023: pol i starost, obrazovna struktura (37/2025), rad na računaru (168/2024), stanovi (43/2025)
-- MONSTAT, Mjesečni statistički pregled 10/2026, str. 29: prosječna neto zarada po opštinama, Ø 2025
+- MONSTAT, Mjesečni statistički pregled 10/2026, str. 29: prosječna neto zarada po opštinama, Ø 2025 i Ø januar-septembar 2026
+- MONSTAT, Popis 2023, saopštenje 135/2024: nacionalna pripadnost, vjera, maternji jezik i jezik kojim se govori, po opštinama
 - MONSTAT, Broj i struktura poslovnih subjekata u CG (2026): aktivni subjekti 2024 i 2025
 - ZZZCG, bilten 1/2026: registrovani nezaposleni po opštinama, 31.1.2026.
 - Kontur Boundaries i Kontur Population ME 2023 (CC BY 4.0)
@@ -63,6 +67,7 @@ Ponovna izgradnja podataka (izvorni fajlovi idu u `raw/`, koji nije u repou):
 pip install geopandas shapely pyogrio pdfplumber pillow pyproj
 python3 scripts/fetch_wikidata.py     # Wikidata tačke
 python3 scripts/extract_stats.py      # MONSTAT / ZZZCG PDF -> build/muni_stats.json
+python3 scripts/extract_popis2.py     # Popis 2023: nacija, jezik, vjera -> build/popis2.json
 python3 scripts/build_hex.py          # heks mreža -> build/cgciv.json
 cp build/cgciv.json site/
 ```

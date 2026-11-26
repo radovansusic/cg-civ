@@ -155,11 +155,18 @@ const HL={
   food:{g:'Prinosi heksa',l:'Hrana',d:'Po terenu, +1 uz more i uz jezero (pravilo igre, ne podatak o proizvodnji)',v:h=>h.food,ramp:['#1f2a14','#4f9a3c','#d6f5b8']},
   nights:{g:'Prinosi heksa',l:'Noćenja',d:'Noćenja 2024 opštine raspoređena po smještajnim objektima iz OSM',v:h=>h.nights,log:1,ramp:['#10202c','#2e9aa8','#c9fbff']},
 };
+const WEALTH_LENS=['Indeks bogatstva','Masa zarada po st. €','Neto plata 01-09.2026 €','Rast plate 2026/2025 %'];
+const POPIS_LENS=['Crnogorci %','Srbi %','Bošnjaci %','Albanci %','Muslimani %','Hrvati %','Rusi %','Ukrajinci %','Govori srpski %','Govori crnogorski %','Govori bosanski %','Govori albanski %','Pravoslavni %','Islam %','Katolici %','Ateisti %'];
+const CATS={'cat:_nacija':{l:'Najbrojnija nacija',c:{Crnogorci:'#c98b6f',Srbi:'#6f8fbf',Bošnjaci:'#6fae8a',Albanci:'#d9b24a'}},'cat:_jezik':{l:'Najčešći jezik u govoru',c:{Crnogorski:'#c98b6f',Srpski:'#6f8fbf',Bosanski:'#6fae8a',Albanski:'#d9b24a'}}};
 const MUNI_LENS=['Neto plata 2025 €','Nezaposlenost % (reg.)','Firme na 1.000 st.','Rast firmi 2024-25 %','Fakultet % (15+)','Programiranje %','Noćenja po stanovniku','Sezonski stanovi %','Promjena 1991-2023 %','Prirodni priraštaj ‰','65+ %','Ljekari na 10.000 st.','MOP korisnici na 1.000 st.','Gustina st/km2'];
-const DIVERGE=new Set(['Promjena 1991-2023 %','Prirodni priraštaj ‰','Rast firmi 2024-25 %']);
+const DIVERGE=new Set(['Promjena 1991-2023 %','Prirodni priraštaj ‰','Rast firmi 2024-25 %','Rast plate 2026/2025 %','Indeks bogatstva']);
 function buildLenses(){
   let g='',out='';
-  const all=[...Object.entries(HL).map(([k,o])=>[k,o.g,o.l,o.d]),...MUNI_LENS.map(c=>['m:'+c,'Po opštinama',c,'Vrijednost opštine, sve heksove boji isto'])];
+  const all=[...Object.entries(HL).map(([k,o])=>[k,o.g,o.l,o.d]),
+    ...WEALTH_LENS.map(c=>['m:'+c,'Bogatstvo',c,c==='Indeks bogatstva'?'CG Civ procjena, nije BDP: prosjek z-vrijednosti mase zarada po stanovniku, firmi na 1.000, sezonskih stanova i udjela sa fakultetom':c.includes('2026')?'MONSTAT, prosjek januar-septembar 2026':'Zaposleni x plata x 12 / stanovnici']),
+    ...MUNI_LENS.map(c=>['m:'+c,'Po opštinama',c,'Vrijednost opštine, sve heksove boji isto']),
+    ...Object.entries(CATS).map(([k,o])=>[k,'Popis 2023: nacija, jezik, vjera',o.l,'Najveća grupa u opštini prema slobodnom izjašnjavanju']),
+    ...POPIS_LENS.map(c=>['m:'+c,'Popis 2023: nacija, jezik, vjera',c,'Udio u stanovništvu opštine, MONSTAT saopštenje 135/2024'])];
   for(const [k,gr,l,d] of all){if(gr!==g){out+=`<div class="lgrp">${esc(gr)}</div>`;g=gr}out+=`<button class="lens" data-k="${esc(k)}" aria-pressed="${k===lens}">${esc(l)}<small>${esc(d)}</small></button>`}
   $('#lensList').innerHTML=out;
   $('#lensList').addEventListener('click',e=>{const b=e.target.closest('.lens');if(b)setLens(b.dataset.k)});
@@ -171,6 +178,7 @@ let scaleCache={};
 function lensScale(){
   if(scaleCache.k===lens)return scaleCache;
   let vals,get,cols,log=0,div=false;
+  if(CATS[lens])return scaleCache={k:lens};
   if(lens.startsWith('m:')){const c=lens.slice(2);get=h=>h.muni?T[h.muni][c]:null;vals=D.table.map(r=>r[c]).filter(v=>v!=null);div=DIVERGE.has(c);cols=div?['#2f6ea6','#f2efe8','#a3243f']:['#f3ead2','#c9786f','#630D3D','#2a0418']}
   else{const o=HL[lens];get=o.v;log=o.log;cols=o.ramp||['#16303f','#9c4a6c','#f7d9e4'];vals=hexes.map(get).filter(v=>v!=null)}
   const tr=v=>log?Math.log10(1+v):v;let lo=Math.min(...vals.map(tr)),hi=Math.max(...vals.map(tr));
@@ -178,6 +186,7 @@ function lensScale(){
   return scaleCache={k:lens,get,cols,lo,hi,tr,log,raw:[Math.min(...vals),Math.max(...vals)]};
 }
 function colorOf(h){
+  if(CATS[lens]&&h.muni){return CATS[lens].c[T[h.muni][lens.slice(4)]]||'#888'}
   if(lens==='terrain'||h.terrain==='sea'||h.terrain==='lake'&&lens!=='elev'){
     const base=TERR[h.terrain][0];if(h.terrain==='sea'||h.terrain==='lake')return base;
     const [r,g,b]=hex2rgb(base),k=1-Math.min(.25,(h.emean||0)/9000);return`rgb(${r*k|0},${g*k|0},${b*k|0})`}
@@ -185,6 +194,7 @@ function colorOf(h){
   return ramp(S.cols,(S.tr(v)-S.lo)/((S.hi-S.lo)||1));
 }
 function legend(){
+  if(CATS[lens]){$('#legend').innerHTML=`<b>${CATS[lens].l}</b><br>`+Object.entries(CATS[lens].c).map(([k,c])=>`<span style="display:inline-block;width:10px;height:10px;background:${c};border-radius:2px"></span> ${k}`).join('<br>')+'<br><span style="color:#9fb1bd">Popis 2023, MONSTAT</span>';return}
   if(lens==='terrain'){$('#legend').innerHTML='<b>Teren</b><br>'+Object.values(TERR).map(([c,l])=>`<span style="display:inline-block;width:10px;height:10px;background:${c};border-radius:2px"></span> ${l}`).join('<br>')+'<br><span class="muted" style="color:#9fb1bd">Gradovi, zvijezde = čuda, munje = elektrane</span>';return}
   const S=lensScale(),name=lens.startsWith('m:')?lens.slice(2):HL[lens].l;
   const g=`linear-gradient(90deg,${[0,.25,.5,.75,1].map(t=>ramp(S.cols,t)).join(',')})`;
@@ -228,7 +238,8 @@ function draw(){
   for(const p of D.power){const x=SQ3*(p.q+p.r/2)*s+tx,y=-1.5*p.r*s+ty,z=Math.max(5,s*.45);cx.fillStyle='#ffd84a';cx.strokeStyle='#3a2a00';cx.lineWidth=1;
     cx.beginPath();cx.moveTo(x+z*.1,y-z);cx.lineTo(x-z*.5,y+z*.1);cx.lineTo(x,y+z*.1);cx.lineTo(x-z*.15,y+z);cx.lineTo(x+z*.5,y-z*.1);cx.lineTo(x,y-z*.1);cx.closePath();cx.fill();cx.stroke()}
   // wonders
-  for(const w of D.wonders){const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(5,s*.5);star(x,y,z);
+  const placed=[];for(const w of D.wonders){const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(5,s*.5);star(x,y,z);
+    const lw=w.name.length*6.5;if(placed.some(p=>Math.abs(p[0]-x)<(p[2]+lw)/2+4&&Math.abs(p[1]-y)<16))continue;placed.push([x,y,lw]);
     if(s>9){cx.font=`${Math.max(11,Math.min(14,s*.6))}px Carlito,sans-serif`;cx.fillStyle='#fff3c4';cx.strokeStyle='rgba(0,0,0,.7)';cx.lineWidth=3;cx.textAlign='center';cx.strokeText(w.name,x,y+z+12);cx.fillText(w.name,x,y+z+12)}}
   // city banners
   const cities=[...D.cities].sort((a,b)=>a.pop-b.pop);
@@ -283,11 +294,12 @@ function openCity(name){
   const ys=[['Hrana',c.food,'food'],['Proizvodnja',c.prod,'prod'],['Zlato (mil. €)',c.gold,'gold'],['Nauka',c.science,'science'],['Kultura',c.culture,'culture'],['Vjera',c.faith,'faith']];
   const W=D.wonders.filter(w=>w.muni===name);
   const pops=[['1991',c.pop1991],['2011',c.pop2011],['2023',c.pop]].filter(p=>p[1]);const pm=Math.max(...pops.map(p=>p[1]));
-  const kv=[['Neto plata 2025','Neto plata 2025 €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost (registrovana)','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2024','Noćenja 2024',''],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2024','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
+  const kv=[['Indeks bogatstva (procjena)','Indeks bogatstva',''],['Neto plata 2025','Neto plata 2025 €',' €'],['Neto plata 01-09.2026','Neto plata 01-09.2026 €',' €'],['Masa zarada po stanovniku','Masa zarada po st. €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost (registrovana)','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2024','Noćenja 2024',''],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2024','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
   $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div></div><button class="x" aria-label="Zatvori">×</button></div>
   <div class="body"><div>
    <h3 style="font-size:19px;margin-bottom:8px">Prinosi</h3><div class="yields">${ys.map(([l,v,k])=>`<div class="y" style="background:${YC[k]};${k==='faith'?'color:#1c1a17':''}"><b>${fmt(v,k==='gold'?1:0)}</b><span>${l}</span></div>`).join('')}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Distrikti</h3><div class="dist">${c.districts.length?c.districts.map(d=>`<span><b>${esc(d.n)}</b><i>${esc(d.why)}</i></span>`).join(''):'<span class="muted">Nijedno pravilo za distrikt nije ispunjeno.</span>'}</div>
+   <h3 style="font-size:19px;margin:16px 0 8px">Narod i jezik (Popis 2023)</h3>${mix(c.nation_mix,CATS['cat:_nacija'].c)}${mix(c.lang_mix,CATS['cat:_jezik'].c)}
    <h3 style="font-size:19px;margin:16px 0 8px">Čuda na teritoriji</h3>${W.length?W.map(w=>`<div>★ ${esc(w.name)} <span class="muted">${w.sitelinks} Wikipedia jezika</span></div>`).join(''):'<div class="muted">Nema među 20 najdokumentovanijih objekata.</div>'}
   </div><div>
    <h3 style="font-size:19px;margin-bottom:8px">Građani</h3>
@@ -300,6 +312,7 @@ function openCity(name){
   </div></div>`;
   $('#city').classList.add('open');$('#cityBox .x').onclick=closeCity;$('#cityBox .x').focus();
 }
+function mix(o,cols){const e=Object.entries(o).sort((a,b)=>b[1]-a[1]);return`<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin:4px 0 2px">${e.map(([k,v])=>`<div title="${esc(k)} ${fmt(v,1)}%" style="width:${v}%;background:${cols[k]||'#9a9a9a'}"></div>`).join('')}</div><div class="muted">${e.slice(0,4).map(([k,v])=>`${esc(k)} ${fmt(v,1)}%`).join(' · ')}</div>`}
 function closeCity(){$('#city').classList.remove('open')}
 $('#city').addEventListener('click',e=>{if(e.target.id==='city')closeCity()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCity()});
@@ -325,6 +338,8 @@ function buildAdvisors(){
    ['Demografski savjetnik','m:Promjena 1991-2023 %',`Od 1991. do 2023. najviše je izgubio ${esc(top('Promjena 1991-2023 %',1,false)[0]['Opština'])} (${fmt(top('Promjena 1991-2023 %',1,false)[0]['Promjena 1991-2023 %'],1)}%), najviše dobila ${esc(top('Promjena 1991-2023 %',1)[0]['Opština'])} (+${fmt(top('Promjena 1991-2023 %',1)[0]['Promjena 1991-2023 %'],1)}%). Opštine nastale poslije 2011. nemaju poređenje.`,'Najveći pad stanovništva od 1991.',li(top('Promjena 1991-2023 %',3,false),'Promjena 1991-2023 %','%')],
    ['Savjetnik za rad','m:Nezaposlenost % (reg.)',`Trinaest sjevernih opština ima ${fmt(nU/nat.unemployed_jan2026*100)}% registrovanih nezaposlenih, a ${fmt(nE/nat.employed2024*100)}% zaposlenih CG.`,'Najveća registrovana nezaposlenost',li(top('Nezaposlenost % (reg.)'),'Nezaposlenost % (reg.)','%')],
    ['Socijalni savjetnik','m:MOP korisnici na 1.000 st.',`Materijalno obezbjeđenje porodice (MOP) je najzastupljenije tamo gdje je nezaposlenost najveća. Ljekara na 10.000 stanovnika najviše ima ${esc(top('Ljekari na 10.000 st.',1)[0]['Opština'])}.`,'Najviše korisnika MOP na 1.000',li(top('MOP korisnici na 1.000 st.'),'MOP korisnici na 1.000 st.','')],
+   ['Savjetnik za bogatstvo','m:Indeks bogatstva',`Indeks bogatstva je CG Civ procjena, ne BDP: spaja masu zarada po stanovniku, firme na 1.000, sezonske stanove i fakultet. Plate januar-septembar 2026 najviše su porasle u ${esc(top('Rast plate 2026/2025 %',1)[0]['Opština'])} (+${fmt(top('Rast plate 2026/2025 %',1)[0]['Rast plate 2026/2025 %'],1)}%), a pale u ${esc(top('Rast plate 2026/2025 %',1,false)[0]['Opština'])} (${fmt(top('Rast plate 2026/2025 %',1,false)[0]['Rast plate 2026/2025 %'],1)}%).`,'Najveći indeks bogatstva',li(top('Indeks bogatstva'),'Indeks bogatstva','',2)],
+   ['Savjetnik za narode i jezike','cat:_nacija',`Prema Popisu 2023, najbrojnija grupa u opštini su Crnogorci u ${D.table.filter(r=>r._nacija==='Crnogorci').length}, Srbi u ${D.table.filter(r=>r._nacija==='Srbi').length}, Bošnjaci u ${D.table.filter(r=>r._nacija==='Bošnjaci').length} i Albanci u ${D.table.filter(r=>r._nacija==='Albanci').length} opština. Srpski je najčešći jezik u govoru u ${D.table.filter(r=>r._jezik==='Srpski').length} od 25 opština.`,'Najveći udio Rusa (Popis 2023)',li(top('Rusi %'),'Rusi %','%')],
    ['Investicioni signali (Schule)','m:Rast firmi 2024-25 %',`Pravilo 1: broj firmi raste brže od CG (${fmt(fg,1)}%), a plata je ispod CG (${nat.net_wage2025} €). Pravilo 2: turizam iznad 20 noćenja po stanovniku, a fakultet ispod CG: ${sig2.map(r=>esc(r['Opština'])).join(', ')||'nema'}. Ovo su signali iz podataka, ne preporuka.`,'Pravilo 1 ispunjavaju',li(sig1,'Rast firmi 2024-25 %','%')],
   ];
   $('#p-advisors').innerHTML=A.map(([t,l,f,h,list])=>`<div class="card"><h3>${t}</h3><p class="find">${f}</p><div class="muted">${h}</div>${list}<button class="go" data-l="${esc(l)}">Prikaži na mapi</button></div>`).join('');
@@ -334,7 +349,7 @@ function buildAdvisors(){
 /* ---------- explorer ---------- */
 let sortC='Stanovnici 2023',sortD=true;
 function buildExplorer(){
-  const cols=Object.keys(D.table[0]).filter(c=>c!=='Opština');
+  const cols=Object.keys(D.table[0]).filter(c=>c!=='Opština'&&!c.startsWith('_'));
   const opt=v=>cols.map(c=>`<option ${c===v?'selected':''}>${esc(c)}</option>`).join('');
   $('#ex').innerHTML=opt('Fakultet % (15+)');$('#ey').innerHTML=opt('Neto plata 2025 €');
   $('#ex').onchange=$('#ey').onchange=scatter;new ResizeObserver(scatter).observe($('#scatter'));table();
@@ -355,7 +370,7 @@ function scatter(){
   sv.onclick=e=>{const g=e.target.closest('g[data-m]');if(g)focusMuni(g.dataset.m)};
 }
 function table(){
-  const cols=Object.keys(D.table[0]);const rows=[...D.table].sort((a,b)=>sortC==='Opština'?a[sortC].localeCompare(b[sortC])*(sortD?-1:1):((b[sortC]??-1e9)-(a[sortC]??-1e9))*(sortD?1:-1));
+  const cols=Object.keys(D.table[0]).filter(c=>!c.startsWith('_'));const rows=[...D.table].sort((a,b)=>sortC==='Opština'?a[sortC].localeCompare(b[sortC])*(sortD?-1:1):((b[sortC]??-1e9)-(a[sortC]??-1e9))*(sortD?1:-1));
   $('#extab').innerHTML=`<thead><tr>${cols.map(c=>`<th data-c="${esc(c)}">${esc(c)}${c===sortC?(sortD?' ↓':' ↑'):''}</th>`).join('')}</tr></thead><tbody>`+
    rows.map(r=>`<tr data-m="${esc(r['Opština'])}" class="${r['Opština']===sel?'hl':''}">${cols.map(c=>`<td class="${c==='Opština'?'':'num'}">${c==='Opština'?esc(r[c]):fmt(r[c],1)}</td>`).join('')}</tr>`).join('')+'</tbody>';
 }
@@ -370,6 +385,8 @@ function buildSources(){
   <p><b>Zlato nije BDP.</b> MONSTAT ne objavljuje BDP po opštinama. Zlato je masa neto zarada: zaposleni 2024 x prosječna neto plata 2025 x 12.</p>
   <p><b>Teren je izveden iz reljefa</b> (Terrarium visine, oko 110 m), ne iz sloja pokrivača tla. Šume se zato ne vide. Hrana je pravilo igre po terenu, ne podatak o poljoprivredi.</p>
   <p><b>Distrikti i čuda</b> se dodjeljuju po objavljenim pravilima, vidljivim u pogledu grada. Čuda su 20 objekata u CG sa najviše jezičkih verzija na Wikipediji (Wikidata, novembar 2026), bez rijeka, jezika i regiona.</p>
+  <p><b>Bogatstvo</b> je CG Civ procjena: prosjek standardizovanih vrijednosti mase zarada po stanovniku, firmi na 1.000 stanovnika, udjela sezonskih stanova i udjela sa fakultetom. Plata 2026 je MONSTAT prosjek januar-septembar 2026 (Mjesečni statistički pregled 10/2026).</p>
+  <p><b>Nacija, jezik i vjera</b> su udjeli iz Popisa 2023 prema slobodnom izjašnjavanju (MONSTAT, saopštenje 135/2024). Mapa ih prikazuje bez tumačenja.</p>
   <p><b>Kontrola zbirova:</b> stanovnici ${fmt(nat.pop2023)}, zaposleni ${fmt(nat.employed2024)}, nezaposleni ${fmt(nat.unemployed_jan2026)}, firme ${fmt(nat.firms2025)}, studenti ${fmt(nat.students2024)} - jednako zvaničnim ukupnim brojevima.</p>
   <h3 style="font-size:20px;margin-top:16px">Zvanični izvori po polju</h3>
   <ul>${Object.entries(S).map(([src,f])=>`<li>${esc(src)} <span class="muted">(${f.map(esc).join(', ')})</span></li>`).join('')}</ul>

@@ -307,6 +307,46 @@ for m in MUNIS:
         'Smještaj (OSM objekti)': sum(h['lodging'] for h in hexes.values() if h['muni'] == m),
     })
 
+# ---------- 2026 wages + census II + wealth index ----------
+W26 = {'Andrijevica': 864, 'Bar': 960, 'Berane': 950, 'Bijelo Polje': 874, 'Budva': 1007, 'Cetinje': 991, 'Danilovgrad': 930,
+       'Gusinje': 839, 'Herceg Novi': 974, 'Kolašin': 925, 'Kotor': 1045, 'Mojkovac': 891, 'Nikšić': 1018, 'Petnjica': 893, 'Plav': 881,
+       'Pljevlja': 1008, 'Plužine': 916, 'Podgorica': 1088, 'Rožaje': 861, 'Šavnik': 898, 'Tivat': 1215, 'Tuzi': 906, 'Ulcinj': 885,
+       'Zeta': 1120, 'Žabljak': 924}   # MONSTAT Mjesečni statistički pregled 10/2026 str. 29, Ø 01-09.2026
+W25 = {'Andrijevica': 823, 'Bar': 940, 'Berane': 926, 'Bijelo Polje': 875, 'Budva': 1023, 'Cetinje': 960, 'Danilovgrad': 893,
+       'Gusinje': 851, 'Herceg Novi': 961, 'Kolašin': 897, 'Kotor': 991, 'Mojkovac': 899, 'Nikšić': 978, 'Petnjica': 822, 'Plav': 876,
+       'Pljevlja': 985, 'Plužine': 891, 'Podgorica': 1054, 'Rožaje': 859, 'Šavnik': 880, 'Tivat': 1265, 'Tuzi': 878, 'Ulcinj': 862,
+       'Zeta': 1122, 'Žabljak': 935}   # isti izvor, Ø 01-09.2025
+P2 = json.load(open(os.path.join(BUILD, 'popis2.json')))['data']
+NAT = [('Crnogorci', 'Crnogorci %'), ('Srbi', 'Srbi %'), ('Bošnjaci', 'Bošnjaci %'), ('Albanci', 'Albanci %'), ('Muslimani', 'Muslimani %'),
+       ('Hrvati', 'Hrvati %'), ('Rusi', 'Rusi %'), ('Ukrajinci', 'Ukrajinci %'), ('Romi', 'Romi %')]
+LANG = [('Crnogorski', 'Govori crnogorski %'), ('Srpski', 'Govori srpski %'), ('Bosanski', 'Govori bosanski %'), ('Albanski', 'Govori albanski %')]
+REL = [('pravoslavna', 'Pravoslavni %'), ('islamska', 'Islam %'), ('katolicka', 'Katolici %'), ('ateisti', 'Ateisti %')]
+import statistics as st
+for row in table:
+    m = row['Opština']
+    row['Neto plata 01-09.2026 €'] = W26[m]
+    row['Rast plate 2026/2025 %'] = round((W26[m] / W25[m] - 1) * 100, 1)
+    row['Masa zarada po st. €'] = round(M[m]['wagebill_meur'] * 1e6 / M[m]['pop2023'])
+    for k, c in NAT: row[c] = P2['1'].get(k, {}).get(m)
+    for k, c in LANG: row[c] = P2['4'].get(k, {}).get(m)
+    for k, c in REL: row[c] = P2['religion'].get(m, {}).get(k)
+    nat_rows = [(P2['1'][k].get(m) or 0, k) for k, _ in NAT[:6]]
+    row['_nacija'] = max(nat_rows)[1]
+    row['_jezik'] = max((P2['4'][k].get(m) or 0, k) for k, _ in LANG)[1]
+def z(vals):
+    mu, sd = st.mean(vals), st.pstdev(vals) or 1
+    return [(v - mu) / sd for v in vals]
+comp = ['Masa zarada po st. €', 'Firme na 1.000 st.', 'Sezonski stanovi %', 'Fakultet % (15+)']
+Z = [z([r[c] or 0 for r in table]) for c in comp]
+for i, r in enumerate(table):
+    r['Indeks bogatstva'] = round(sum(zz[i] for zz in Z) / len(Z), 2)
+for c in cities:
+    r = next(x for x in table if x['Opština'] == c['name'])
+    c['nation'] = r['_nacija']; c['lang'] = r['_jezik']
+    c['nation_mix'] = {k: r[col] for k, col in NAT if r[col]}
+    c['lang_mix'] = {k: r[col] for k, col in LANG if r[col]}
+    c['wage26'] = W26[c['name']]; c['wealth'] = r['Indeks bogatstva']
+
 out = {
     'meta': {'hexR_m': R, 'hex_km2': 7.96, 'built': '2026-11-26', 'nat': nat},
     'hexes': [{k: (round(v, 4) if isinstance(v, float) else v) for k, v in h.items()
