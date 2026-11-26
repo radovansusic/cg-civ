@@ -11,6 +11,8 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 | Teren izbliza: Boka, Lovćen, Cetinje | Pogled grada |
 |---|---|
 | ![Teren izbliza: šume, planine, rijeke i gradovi](docs/detalj.png) | ![Pogled grada Podgorica](docs/pogled-grada.png) |
+| **Boka, Prevlaka i Lovćen** | |
+| ![Boka, granica prema Hrvatskoj, Prevlaka i Lovćen](docs/boka.png) | |
 | **Sveta mjesta i Savjetnik za vjeru** | **Istraživač** |
 | ![Sveta mjesta: Cetinje, Lovćen, Boka](docs/sveta-mjesta.png) | ![Istraživač](docs/istrazivac.png) |
 | **Najbrojnija nacija (Popis 2023)** | |
@@ -24,6 +26,8 @@ Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/) i [France Civ](ht
 
 - **Mapa:** teren iz satelitskog pokrivača tla (ESA WorldCover 2021: šume, livade, makija, polja, naselja) i reljefa (brda, planine, snijeg, sjenčenje), rijeke iz OSM-a, Jadran i susjedne zemlje u magli, gradski barjaci sa distriktima, 20 čuda, elektrane, pregledna mapa i brza sočiva.
 - **46 sočiva:** 10 prinosa po heksu (zlato, proizvodnja, nauka, kultura, vjera, hrana, stanovnici, noćenja, reljef, teren), 4 sočiva bogatstva (indeks bogatstva, masa zarada po stanovniku, plata januar-septembar 2026, rast plate), 14 pokazatelja po opštini i 18 sočiva iz Popisa 2023 (najbrojnija nacija, najčešći jezik, udjeli nacija, jezika i vjera).
+- **Boka i granica:** obala i Boka iz finog reljefa (oko 30 m), precizna kopnena granica (Kontur, OSM), susjedne zemlje u sivom reljefu, Prevlaka označena kao zona čije razgraničenje nije završeno (Privremeni protokol 2002).
+- **Lovćen kao mitsko mjesto:** svjetlost koja se pojavljuje nad Njegoševom kapelom i mauzolejem, sa pričom mjesta na klik.
 - **Sveta mjesta:** 83 vjerska i memorijalna objekta iz Wikidata. Zlatne značke su sveta čuda: Manastir Ostrog, Cetinjski manastir, Njegošev mauzolej na Lovćenu (na mjestu Njegoševe kapele) i najpoznatiji hram svake vjere: Kotorska katedrala, Saborna crkva u Podgorici, Husein-pašina džamija, Manastir Morača. Savjetnik za vjeru i baštinu.
 - **Pretraga** opština, čuda i svetih mjesta.
 - **Pogled grada** kao bočna ploča: mapa se zumira na opštinu, medalje ranga (stanovnici, zlato, plata, bogatstvo), sveta mjesta i stanovnici po heksu. Za 25 opština: prinosi, distrikti po objavljenim pravilima, građani, popisi 1991-2011-2023, rang među opštinama.

@@ -165,14 +165,14 @@ REN = {"Pasha's Mosque": 'Pašina džamija (Ulcinj)', "Seaman's Mosque": 'Pomors
        'Holy Trinity monastery ( Pljevlja )': 'Manastir Sveta Trojica (Pljevlja)', 'Church of Our Lady of Remedy': 'Crkva Gospe od Zdravlja (Kotor)',
        'Church of Saint Luke in Kotor': 'Crkva Svetog Luke (Kotor)', 'Serbian Orthodox church of St Nicolas in Kotor': 'Crkva Svetog Nikole (Kotor)',
        'Saint Anne (Kotor)': 'Crkva Svete Ane (Kotor)', 'Katedrala Bezgrešnog začeća Blažene Djevice Marije na Gretvi, Stari Bar': 'Katedrala na Gretvi (Bar)',
-       'Njegošev mauzolej': 'Njegošev mauzolej na Lovćenu', 'Dovolja Monastery': 'Manastir Dovolja', 'Church of the Holy Savior': 'Crkva Svetog Spasa',
+       'Njegošev mauzolej': 'Lovćen: Njegoševa kapela i mauzolej', 'Dovolja Monastery': 'Manastir Dovolja', 'Church of the Holy Savior': 'Crkva Svetog Spasa',
        'Đurđevića Tara Monastery': 'Manastir Đurđevića Tara', 'Podmalinsko Monastery': 'Manastir Podmalinsko', 'Majstorovina Monastery': 'Manastir Majstorovina',
        'Church of St. Ivan': 'Crkva Svetog Ivana', 'Saint Michael the Archangel church in Herceg Novi': 'Crkva Svetog Arhanđela Mihaila (Herceg Novi)',
        'Saints Peter and Paul Orthodox church in Risan': 'Crkva Svetih Petra i Pavla (Risan)', 'Church of St. Jerome in Herceg Novi': 'Crkva Svetog Jeronima (Herceg Novi)',
        'Church of Saints Peter and Paul, Bijelo Polje': 'Crkva Svetih Petra i Pavla (Bijelo Polje)', 'St. John the Baptist Church in Zaton': 'Crkva Svetog Jovana Krstitelja (Zaton)',
        'St. Mary Church': 'Crkva Svete Marije', 'Royal Tomb in Cetinje': 'Kraljevska grobnica (Cetinje)', 'St. Michael church in Kotor': 'Crkva Svetog Mihaila (Kotor)',
        'St Elijah Church': 'Crkva Svetog Ilije'}
-NOTE = {'Q13424615': 'Na Jezerskom vrhu, na mjestu kapele koju je Njegoš podigao 1845; kapela je srušena 1972, mauzolej otvoren 1974.',
+NOTE = {'Q13424615': 'Jezerski vrh, 1.657 m. Njegoš je 1845. podigao kapelu posvećenu Svetom Petru Cetinjskom i u njoj tražio da bude sahranjen; prenesen je 1855. Kapela je razorena 1916, obnovljena između dva rata, srušena 1972; Meštrovićev mauzolej otvoren je 1974.',
         'Q1257434': 'Manastir u stijeni iz 17. vijeka, jedno od najposjećenijih hodočasničkih mjesta na Balkanu.', 'Q770580': 'Osnovan 1484; čuva mošti Svetog Petra Cetinjskog.'}
 def kind(r):
     t, rl = r['types'].lower(), r['rel'].lower()
@@ -193,7 +193,73 @@ for r in json.load(open(os.path.join(RAW, 'wd_holy.json'))):
 holy.sort(key=lambda h: (-h['star'], -h['sl']))
 print('holy', len(holy), [(h['n'], h['k'], h['sl']) for h in holy[:10]])
 
-json.dump(dict(lc=lc, ctx=ctx, rivers=rivers, labels=labels, holy=holy,
+# ---------- obala i Boka u finoj rezoluciji (Terrarium z12, ~28 m) ----------
+from scipy import ndimage
+Z2 = 12; n12 = 2 ** Z2
+t12 = glob.glob(os.path.join(RAW, 'dem12', '*.png'))
+x12 = sorted({int(os.path.basename(t).split('_')[1]) for t in t12}); y12 = sorted({int(os.path.basename(t).split('_')[2][:-4]) for t in t12})
+m12 = np.full((len(y12) * 256, len(x12) * 256), 50, dtype=np.float32)
+for t in t12:
+    _, xx, yy = os.path.basename(t)[:-4].split('_')
+    a = np.asarray(Image.open(t).convert('RGB')).astype(np.float32)
+    m12[y12.index(int(yy)) * 256:(y12.index(int(yy)) + 1) * 256, x12.index(int(xx)) * 256:(x12.index(int(xx)) + 1) * 256] = a[..., 0] * 256 + a[..., 1] + a[..., 2] / 256 - 32768
+def e12(lon, lat):
+    px = (np.asarray(lon) + 180) / 360 * n12 * 256 - x12[0] * 256
+    py = (1 - np.arcsinh(np.tan(np.radians(np.asarray(lat)))) / np.pi) / 2 * n12 * 256 - y12[0] * 256
+    return m12[np.clip(py.astype(int), 0, m12.shape[0] - 1), np.clip(px.astype(int), 0, m12.shape[1] - 1)]
+# raster u heks jedinicama, 50 m po pikselu, za obalni pojas
+RES = 50.0
+X0, Y0 = to_utm.transform(18.42, 42.57); X1, Y1 = to_utm.transform(19.44, 41.85)
+xs_ = np.arange(X0, X1, RES); ys_ = np.arange(Y0, Y1, -RES)
+GX, GY = np.meshgrid(xs_, ys_)
+LON, LAT = to_ll.transform(GX, GY)
+EL = e12(LON, LAT)
+water = EL < 0.5
+water = ndimage.binary_opening(water, iterations=1)
+# Skadarsko jezero i kopnena jezera nijesu more: samo voda povezana sa otvorenim morem
+lab, nl = ndimage.label(water)
+sea_lab = np.bincount(lab[-1, :][lab[-1, :] > 0]).argmax() if (lab[-1, :] > 0).any() else 0
+sea = lab == sea_lab
+dist = ndimage.distance_transform_edt(sea) * RES        # m od obale
+img = np.zeros(sea.shape + (4,), dtype=np.uint8)
+t = np.clip(dist / 2500, 0, 1)
+shallow, deep = np.array([52, 140, 156]), np.array([30, 96, 128])
+col = shallow[None, None, :] * (1 - t[..., None]) + deep[None, None, :] * t[..., None]
+foam = sea & (dist <= RES * 1.01)
+col[foam] = [205, 236, 232]
+img[..., :3] = col.astype(np.uint8)
+alpha = np.where(sea, np.clip((5200 - dist) / 2000, 0, 1) * 255, 0)
+img[..., 3] = alpha.astype(np.uint8)
+Image.fromarray(img, 'RGBA').save(os.path.join(HERE, '..', 'site', 'obala.png'), optimize=True)
+coast = dict(x=round((X0 - minx) / R, 4), y=round(-(Y0 - miny) / R, 4), w=round(len(xs_) * RES / R, 4), h=round(len(ys_) * RES / R, 4))
+print('obala.png', img.shape, os.path.getsize(os.path.join(HERE, '..', 'site', 'obala.png')))
+
+# kopnena državna granica (bez obale), precizna linija iz Kontur granica
+ext = country if country.geom_type == 'Polygon' else max(country.geoms, key=lambda g: g.area)
+pts = list(ext.exterior.coords)
+lon_, lat_ = to_ll.transform(np.array([p[0] for p in pts]), np.array([p[1] for p in pts]))
+near = np.zeros(len(pts), bool)
+for dx, dy in [(0, 0), (200, 0), (-200, 0), (0, 200), (0, -200), (140, 140), (-140, -140), (140, -140), (-140, 140)]:
+    lo2, la2 = to_ll.transform(np.array([p[0] + dx for p in pts]), np.array([p[1] + dy for p in pts]))
+    inside = (lo2 > 18.42) & (lo2 < 19.44) & (la2 > 41.85) & (la2 < 42.57)
+    near |= inside & (e12(lo2, la2) < 0.5)
+border, cur = [], []
+for (x, y), c in zip(pts, near):
+    if not c: cur.append((x, y))
+    elif cur:
+        if len(cur) > 2: border.append(cur)
+        cur = []
+if len(cur) > 2: border.append(cur)
+border = [[unit(x, y) for x, y in LineString(b).simplify(40).coords] for b in border]
+print('kopnena granica', len(border), sum(len(b) for b in border))
+
+def U(lon, lat): return unit(*to_utm.transform(lon, lat))
+countries = [dict(n='HRVATSKA', p=U(18.33, 42.6)), dict(n='BOSNA I HERCEGOVINA', p=U(18.45, 43.2)), dict(n='SRBIJA', p=U(19.95, 43.35)),
+             dict(n='KOSOVO', p=U(20.45, 42.72)), dict(n='ALBANIJA', p=U(19.75, 42.15)), dict(n='JADRANSKO MORE', p=U(18.85, 42.0))]
+prevlaka = dict(n='Prevlaka', p=U(18.5372, 42.3958),
+    note='Po Privremenom protokolu iz 2002. kopneni dio poluostrva i pojas mora na ulazu u Boku od oko 550 m pripadaju Hrvatskoj, a dio akvatorija uz poluostrvo nije razgraničen. Crna Gora smatra pitanje granice na kopnu i moru otvorenim; konačno razgraničenje nije završeno.')
+
+json.dump(dict(lc=lc, ctx=ctx, rivers=rivers, labels=labels, holy=holy, coast=coast, border=border, countries=countries, prevlaka=prevlaka,
                src='Pokrivač tla: ESA WorldCover 2021 (10 m), uzorak 61 tačka po heksu. Rijeke: OpenStreetMap. Okolne zemlje i more: reljef Terrarium.'),
           open(os.path.join(BUILD, 'cgviz.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 print('wrote', os.path.getsize(os.path.join(BUILD, 'cgviz.json')))

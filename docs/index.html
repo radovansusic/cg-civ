@@ -35,6 +35,17 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 
 #map{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
 #legend{position:absolute;left:12px;top:12px;background:rgba(12,22,32,.9);color:#e9e4d8;border:1px solid var(--gold2);border-radius:8px;padding:9px 12px;font-size:13px;max-width:min(300px,60%);box-shadow:0 4px 14px rgba(0,0,0,.45)}
 #legend b{font-family:Caladea,serif;font-size:15px;color:#f3ead2}
+#myth{position:absolute;left:0;top:0;width:160px;height:160px;transform:translate(-50%,-50%);pointer-events:none;opacity:0;animation:mythIn 2.6s ease-out 1.1s forwards;z-index:1}
+#myth .halo,#myth .rays,#myth .core{position:absolute;inset:0;border-radius:50%}
+#myth .halo{background:radial-gradient(circle,rgba(255,236,170,.75) 0,rgba(255,206,110,.38) 22%,rgba(255,190,90,.12) 45%,rgba(255,190,90,0) 68%);animation:mythPulse 3.6s ease-in-out infinite;mix-blend-mode:screen}
+#myth .rays{background:repeating-conic-gradient(from 0deg,rgba(255,226,150,.22) 0 5deg,rgba(255,226,150,0) 5deg 22deg);-webkit-mask:radial-gradient(circle,#000 8%,transparent 66%);mask:radial-gradient(circle,#000 8%,transparent 66%);animation:mythSpin 40s linear infinite;mix-blend-mode:screen}
+#myth .core{pointer-events:auto;cursor:pointer;inset:44%;background:radial-gradient(circle,#fffbe8,#ffd36e 60%,rgba(255,200,90,0));box-shadow:0 0 18px 6px rgba(255,214,120,.65)}
+#myth .mlab{position:absolute;left:50%;top:70%;transform:translateX(-50%);pointer-events:auto;cursor:pointer;border:1px solid rgba(255,214,140,.8);background:linear-gradient(rgba(60,30,10,.85),rgba(30,15,5,.9));color:#ffe8b0;border-radius:14px;padding:3px 12px 4px;font:700 15px Caladea,serif;font-variant:small-caps;letter-spacing:.14em;white-space:nowrap;text-shadow:0 0 8px rgba(255,200,100,.8);box-shadow:0 0 14px rgba(255,200,100,.45)}
+#myth .mlab small{display:block;font:italic 400 11px Caladea,serif;letter-spacing:.04em;color:#f3dca4;text-shadow:none}
+@keyframes mythIn{0%{opacity:0;filter:blur(8px);transform:translate(-50%,-50%) scale(.4)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes mythPulse{0%,100%{transform:scale(.92);opacity:.85}50%{transform:scale(1.18);opacity:1}}
+@keyframes mythSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#myth{animation:none;opacity:1}#myth .halo,#myth .rays{animation:none}}
 #mini{position:absolute;left:12px;bottom:12px;width:190px;height:160px;border:2px solid var(--gold2);border-radius:6px;background:#0a1622;box-shadow:0 4px 14px rgba(0,0,0,.5);cursor:pointer}
 #lensbar{position:absolute;right:12px;bottom:12px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:calc(100% - 230px);padding:5px;background:rgba(12,22,32,.85);border:1px solid var(--gold2);border-radius:8px}
 #lensbar button{border:1px solid #3a4f62;background:linear-gradient(#22364a,#172636);color:#e6dfcd;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer;min-height:36px}
@@ -120,6 +131,7 @@ header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;
     <div id="legend"></div><div id="tip"></div>
     <canvas id="mini" aria-label="Pregledna mapa, klik pomjera pogled"></canvas>
     <div id="lensbar" aria-label="Brza sočiva"></div>
+    <div id="myth" aria-hidden="false"><div class="rays"></div><div class="halo"></div><div class="core"></div><button class="mlab" type="button">Lovćen<small>Njegoševa kapela</small></button></div>
   </div>
   <aside>
     <div class="tabs" role="tablist">
@@ -153,6 +165,7 @@ const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture
 let touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
 const cv=$('#map');let cx=cv.getContext('2d');const CX0=cx;
 
+let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png'}
 Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u).then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
 
 function init(){
@@ -243,6 +256,9 @@ function prepWorld(){
   let fr=ALL.filter(o=>o.t!=='sea');fr.forEach(o=>dist[o.q+','+o.r]=0);
   for(let d=1;d<6&&fr.length;d++){const nx=[];for(const o of fr)for(const[a,b]of NB){const k=(o.q+a)+','+(o.r+b);if(dist[k]==null&&AK[k]&&AK[k].t==='sea'){dist[k]=d;nx.push(AK[k])}}fr=nx}
   for(const o of ALL){o.col=baseCol(o);o.glyph=glyphs(o)}
+  const C=V.coast,inC=o=>o.px>C.x&&o.px<C.x+C.w&&o.py>C.y&&o.py<C.y+C.h;
+  for(const o of ALL){o.inC=inC(o);if(o.t!=='sea'||!o.inC||(dist[o.q+','+o.r]??9)>1)continue;
+    for(const[a,b]of NB){const n=AK[(o.q+a)+','+(o.r+b)];if(n&&n.t!=='sea'&&n.t!=='lake'){o.bandCol=n.col;break}}}
   ALL.sort((a,b)=>a.py-b.py);
   let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const o of ALL){x0=Math.min(x0,o.px);x1=Math.max(x1,o.px);y0=Math.min(y0,o.py);y1=Math.max(y1,o.py)}
   worldBox=[x0,x1,y0,y1];
@@ -347,7 +363,11 @@ function draw(){
   const k=s/SC.s;cx.fillStyle='#08172a';cx.fillRect(0,0,W,H);
   cx.drawImage(SC.c,tx-(SC.tx+MG)*k,ty-(SC.ty+MG)*k,SC.c.width/dpr*k,SC.c.height/dpr*k);
   if(SC.s===s)overlay(W,H);else{legend();mini()}
+  placeMyth(W,H);
 }
+function placeMyth(W,H){const m=$('#myth'),h=V.holy.find(x=>x.id==='Q13424615');if(!h)return;const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=Math.max(90,Math.min(300,s*7));
+  m.style.width=m.style.height=z+'px';m.style.left=x+'px';m.style.top=y+'px';m.style.display=(x<-z||y<-z||x>W+z||y>H+z)?'none':'block';
+  const L=m.querySelector('.mlab');L.style.fontSize=Math.max(13,Math.min(18,s*.6))+'px';L.style.display=s<9?'none':'block'}
 function rebuild(W,H){
   if(!SC||SC.W!==W||SC.H!==H||SC.dpr!==dpr){const c=document.createElement('canvas');c.width=(W+2*MG)*dpr;c.height=(H+2*MG)*dpr;SC={c,g:c.getContext('2d')}}
   Object.assign(SC,{s,tx,ty,lens,sel,W,H,dpr});
@@ -360,7 +380,7 @@ function paintStatic(W,H){
   const terr=lens==='terrain',S=terr?null:lensScale();
   // 1. podloga heksova
   for(const o of ALL){if(!vis(o))continue;const x=o.px*s+tx,y=o.py*s+ty;cx.beginPath();hexPath(x,y,R*1.02);
-    cx.fillStyle=o.col;cx.fill();
+    cx.fillStyle=(COAST&&o.bandCol)?o.bandCol:o.col;cx.fill();
     if(!terr&&o.cg&&o.h.muni){cx.fillStyle=colorOf(o.h);cx.globalAlpha=.84;cx.fill();cx.globalAlpha=1}}
   // 1b. slikarska tekstura (šum vezan za svijet, ne za ekran) i blagi reljef ivica heksa
   if(NOISE){const m=new DOMMatrix([s*2.2,0,0,s*2.2,tx,ty]);NOISE.setTransform(m);cx.save();cx.globalCompositeOperation='overlay';cx.globalAlpha=terr?.55:.25;cx.fillStyle=NOISE;cx.fillRect(0,0,W,H);
@@ -372,7 +392,7 @@ function paintStatic(W,H){
   if(s>4){cx.beginPath();for(const o of ALL){if(!vis(o))continue;hexPath(o.px*s+tx,o.py*s+ty,R)}cx.strokeStyle=s>9?'rgba(10,20,10,.16)':'rgba(10,20,10,.1)';cx.lineWidth=.7;cx.stroke()}
   // 3. obala: pjena na ivici kopna i mora
   cx.lineCap='round';cx.strokeStyle='rgba(225,245,240,.6)';cx.lineWidth=Math.max(1,s*.13);cx.beginPath();
-  for(const o of ALL){if(o.t==='sea'||o.t==='lake'||!vis(o))continue;const x=o.px*s+tx,y=o.py*s+ty;
+  for(const o of ALL){if(o.t==='sea'||o.t==='lake'||!vis(o)||(COAST&&o.inC))continue;const x=o.px*s+tx,y=o.py*s+ty;
     for(const[a,b]of NB){const n=AK[(o.q+a)+','+(o.r+b)];if(n&&(n.t==='sea'||n.t==='lake')){const e=edgePts(x,y,a,b,R);cx.moveTo(e[0],e[1]);cx.lineTo(e[2],e[3])}}}
   cx.stroke();
   // 4. rijeke
@@ -384,14 +404,19 @@ function paintStatic(W,H){
   if(s>3.2){const ga=terr?1:.28;for(const o of ALL){if(!o.glyph.length||!vis(o))continue;const x=o.px*s+tx,y=o.py*s+ty;
     cx.globalAlpha=o.cg?ga:ga*.6;for(const[n,dx,dy,sc]of o.glyph){const z=R*sc*(n==='city'?1:.95);cx.drawImage(SPR[n],x+dx*R-z*.5,y+dy*R-z*.5-(n==='mtn'||n==='mtnS'?z*.05:0),z,z)}}
     cx.globalAlpha=1}
+  // 5b. precizna obala i Boka (Terrarium z12, 50 m)
+  if(COAST){const C=V.coast;cx.imageSmoothingEnabled=true;cx.drawImage(COAST,C.x*s+tx,C.y*s+ty,C.w*s,C.h*s)}
   // 6. granice opština (isprekidano) i državna granica (Civ teritorija)
   const mun=new Path2D(),nat2=new Path2D();
   for(const h of hexes){if(!h.muni)continue;const x=h.px*s+tx,y=h.py*s+ty;if(x<-R||y<-R||x>W+R||y>H+R)continue;
-    for(const[a,b]of NB){const n=byKey[(h.q+a)+','+(h.r+b)];if(n&&n.muni===h.muni)continue;const e=edgePts(x,y,a,b,R);const P=(!n||!n.muni)?nat2:mun;P.moveTo(e[0],e[1]);P.lineTo(e[2],e[3])}}
+    for(const[a,b]of NB){const n=byKey[(h.q+a)+','+(h.r+b)];if(n&&n.muni===h.muni)continue;const nn=AK[(h.q+a)+','+(h.r+b)];if(n&&!n.muni&&nn&&(nn.t==='sea'||nn.t==='lake'))continue;const e=edgePts(x,y,a,b,R);const P=(!n||!n.muni)?nat2:mun;P.moveTo(e[0],e[1]);P.lineTo(e[2],e[3])}}
   cx.setLineDash([Math.max(2,s*.35),Math.max(2,s*.25)]);cx.strokeStyle='rgba(255,246,220,.55)';cx.lineWidth=Math.max(1,s*.08);cx.stroke(mun);cx.setLineDash([]);
-  cx.strokeStyle='rgba(110,20,70,.4)';cx.lineWidth=Math.max(4,Math.min(12,s*.5));cx.stroke(nat2);
-  cx.strokeStyle='#c2577f';cx.lineWidth=Math.max(1.6,Math.min(4,s*.15));cx.stroke(nat2);
-  cx.strokeStyle='rgba(255,224,160,.85)';cx.lineWidth=Math.max(.7,s*.05);cx.stroke(nat2);
+  cx.strokeStyle='rgba(110,20,70,.22)';cx.lineWidth=Math.max(3,Math.min(9,s*.4));cx.stroke(nat2);
+  // precizna kopnena državna granica (Kontur, OSM)
+  const pb=new Path2D();for(const L of V.border){L.forEach(([x,y],i)=>{const X=x*s+tx,Y=y*s+ty;i?pb.lineTo(X,Y):pb.moveTo(X,Y)})}
+  cx.lineJoin='round';cx.strokeStyle='rgba(20,8,16,.7)';cx.lineWidth=Math.max(3,Math.min(7,s*.22));cx.stroke(pb);
+  cx.strokeStyle='#d8467e';cx.lineWidth=Math.max(1.8,Math.min(4.5,s*.13));cx.stroke(pb);
+  cx.setLineDash([Math.max(4,s*.5),Math.max(3,s*.3)]);cx.strokeStyle='#ffd98a';cx.lineWidth=Math.max(.8,Math.min(2,s*.05));cx.stroke(pb);cx.setLineDash([]);
   if(sel){const sp=new Path2D();for(const h of hexes){if(h.muni!==sel)continue;const x=h.px*s+tx,y=h.py*s+ty;
     for(const[a,b]of NB){const n=byKey[(h.q+a)+','+(h.r+b)];if(n&&n.muni===sel)continue;const e=edgePts(x,y,a,b,R);sp.moveTo(e[0],e[1]);sp.lineTo(e[2],e[3])}}
     cx.strokeStyle='rgba(255,209,102,.35)';cx.lineWidth=Math.max(5,s*.6);cx.stroke(sp);cx.strokeStyle='#ffd166';cx.lineWidth=Math.max(2,s*.22);cx.stroke(sp)}
@@ -405,6 +430,14 @@ function paintStatic(W,H){
 }
 function overlay(W,H){
   const R=s,terr=lens==='terrain';
+  // 7b. susjedne zemlje i Prevlaka
+  if(s<22){cx.textAlign='center';cx.textBaseline='middle';for(const c of V.countries){const x=c.p[0]*s+tx,y=c.p[1]*s+ty;if(x<-200||y<-40||x>W+200||y>H+40)continue;
+    const fs=Math.max(12,Math.min(26,s*1.3));cx.font=`700 ${fs}px Caladea,serif`;try{cx.letterSpacing=(fs*.3)+'px'}catch(e){}
+    cx.fillStyle=c.n==='JADRANSKO MORE'?'rgba(170,215,235,.55)':'rgba(225,228,232,.5)';cx.fillText(c.n,x,y)}try{cx.letterSpacing='0px'}catch(e){}cx.textBaseline='alphabetic'}
+  {const P=V.prevlaka,x=P.p[0]*s+tx,y=P.p[1]*s+ty,z=Math.max(6,Math.min(16,s*.55));P._xy=[x,y,z+4];
+    cx.setLineDash([3,3]);cx.strokeStyle='#ffb347';cx.lineWidth=2;cx.beginPath();cx.arc(x,y,z,0,7);cx.stroke();cx.setLineDash([]);
+    if(s>5){cx.font=`italic 700 ${Math.max(11,Math.min(14,s*.5))}px Caladea,serif`;cx.textAlign='right';cx.lineWidth=3;cx.strokeStyle='rgba(10,10,10,.85)';
+      const t='Prevlaka · granica nije konačno utvrđena';cx.strokeText(t,x-z-4,y+4);cx.fillStyle='#ffcf8a';cx.fillText(t,x-z-4,y+4)}}
   // 8. imena opština (srednji zum, ne preko barjaka)
   const BB=bannerLayout(W,H);
   if(s>8.5&&s<30){cx.textAlign='center';cx.textBaseline='middle';
@@ -482,7 +515,7 @@ function holyBadge(x,y,z,k,star){cx.save();cx.translate(x,y);
   cx.strokeStyle=star?'#b8862a':'#7d6b4a';cx.lineWidth=star?Math.max(1.5,z*.16):1;cx.stroke();
   if(star){cx.strokeStyle='rgba(255,232,160,.55)';cx.lineWidth=Math.max(1,z*.08);cx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;cx.lineTo(Math.cos(a)*z*1.28,Math.sin(a)*z*1.28)}cx.closePath();cx.stroke()}
   holyGlyph(cx,k,z);cx.restore()}
-function holyVisible(h){return showHoly&&(h.star||s>9||(s>6.5&&h.sl>=7))}
+function holyVisible(h){return showHoly&&h.id!=='Q13424615'&&(h.star||s>9||(s>6.5&&h.sl>=7))}
 function drawHoly(W,H,placed){
   const later=[];if(!showHoly)return later;const list=V.holy.filter(holyVisible);
   for(const h of [...list].reverse()){const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=h.star?Math.max(8,Math.min(15,s*.62)):Math.max(5.5,Math.min(11,s*.42));if(x<-30||y<-30||x>W+30||y>H+30)continue;
@@ -504,6 +537,9 @@ function buildSearch(){
     if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];showHoly=true;lensbar()}else return;
     const r=cv.getBoundingClientRect();touched=true;s=Math.max(s,16);tx=r.width/2-px*s;ty=r.height/2-py*s;draw();
     setTimeout(()=>{if(h&&h._xy){tip(h._xy[0],h._xy[1])}else tip(r.width/2,r.height/2)},80);e.target.value=''})}
+['#myth .mlab','#myth .core'].forEach(q=>document.querySelector(q).addEventListener('click',e=>{const h=V.holy.find(x=>x.id==='Q13424615'),t=$('#tip'),r=cv.getBoundingClientRect(),b=e.target.getBoundingClientRect();
+  t.innerHTML=`<b>Lovćen: Njegoševa kapela i mauzolej</b><br>${esc(h.note)}<br><span style="color:#9fb1bd">Sveto i memorijalno mjesto, ${h.sl} jezika na Wikipediji</span>`;t.style.display='block';
+  t.style.left=Math.min(b.left-r.left,r.width-270)+'px';t.style.top=(b.bottom-r.top+8)+'px'}));
 /* pregledna mapa */
 let miniImg=null,miniT=null;
 function mini(){
@@ -546,7 +582,8 @@ function hexLines(h){
   Stanovnici <b class="num">${fmt(h.pop)}</b><br>Hrana ${h.food} · Proizvodnja ${h.prod} · Zlato ${fmt(h.gold,1)}<br>Nauka ${h.science} · Kultura ${h.culture} · Vjera ${h.faith}`+
   (h.mw?`<br>Elektrana ${fmt(h.mw)} MW`:'')+(h.lodging?`<br>Smještajnih objekata ${h.lodging}`:'');
 }
-function tip(x,y){const t=$('#tip'),hs=holyAt(x,y);
+function tip(x,y){const t=$('#tip'),hs=holyAt(x,y),P=V.prevlaka;
+  if(P._xy&&Math.hypot(P._xy[0]-x,P._xy[1]-y)<P._xy[2]){t.innerHTML=`<b>Prevlaka</b><br>${esc(P.note)}`;t.style.display='block';const W=cv.getBoundingClientRect().width;t.style.left=Math.min(x+14,W-270)+'px';t.style.top=(y+14)+'px';return}
   if(hs){t.innerHTML=`<b>${esc(hs.n)}</b><br>${HK[hs.k]} · ${esc(hs.m)}<br><span class="num">${hs.sl}</span> jezika na Wikipediji${hs.note?'<br>'+esc(hs.note):''}`;t.style.display='block';const W=cv.getBoundingClientRect().width;t.style.left=Math.min(x+14,W-270)+'px';t.style.top=(y+14)+'px';return}
   const h=pick(x,y);if(!h){t.style.display='none';return}const c=cityByKey[h.q+','+h.r];
   t.innerHTML=(c?`<b>${esc(c.name)}</b> - grad, klik za pogled grada<br>`:'')+hexLines(h);t.style.display='block';
@@ -666,6 +703,8 @@ function buildSources(){
   <h3 style="font-size:20px;margin-top:16px">Zvanični izvori po polju</h3>
   <ul>${Object.entries(S).map(([src,f])=>`<li>${esc(src)} <span class="muted">(${f.map(esc).join(', ')})</span></li>`).join('')}</ul>
   <h3 style="font-size:20px;margin-top:16px">Prostorni i otvoreni izvori</h3>
+  <p><b>Boka i granica.</b> Obala i Boka crtaju se preko heksova iz finog reljefa (Terrarium z12, oko 30 m, raster 50 m), pa se vide zalivi, Verige i Luštica. Kopnena državna granica je precizna linija iz Kontur granica (OSM). Prevlaka je označena kao zona čije razgraničenje nije završeno: po Privremenom protokolu iz 2002. kopno je pod Hrvatskom, a Crna Gora pitanje granice na kopnu i moru smatra otvorenim.</p>
+  <p><b>Lovćen</b> je istaknut kao mitsko mjesto: Njegoševa kapela iz 1845, na čijem je mjestu od 1974. mauzolej.</p>
   <p><b>Sveta mjesta</b> su vjerski i memorijalni objekti iz Wikidata sa koordinatama u Crnoj Gori (${V.holy.length}), rangirani po broju jezičkih verzija na Wikipediji. Zlatne značke su sveta čuda: Manastir Ostrog, Cetinjski manastir, Njegošev mauzolej na Lovćenu (na mjestu Njegoševe kapele iz 1845, srušene 1972) i najpoznatiji hram svake vjere. Sve vjere imaju istu boju znački.</p>
   <ul><li>Granice 25 opština: Kontur Boundaries ME 2023 (OSM, CC BY 4.0)</li><li>Naseljenost: Kontur Population ME 2023, H3 mreža (CC BY 4.0)</li><li>Reljef: Terrarium visinske pločice (AWS Open Data, Mapzen)</li><li>Pokrivač tla: ESA WorldCover 2021 v200, 10 m (CC BY 4.0)</li><li>Rijeke: © OpenStreetMap saradnici (ODbL)</li><li>Skadarsko jezero: Natural Earth (javno dobro)</li><li>Bogomolje, smještaj, baština: © OpenStreetMap saradnici (ODbL), novembar 2026</li><li>Elektrane, čuda i sveta mjesta: Wikidata (CC0)</li></ul>
   <p class="muted">Po uzoru na Karpathyjev USA Civ (karpathy.ai/usaciv). Napravio Schule d.o.o., Podgorica · <a href="https://schule.co.me">schule.co.me</a> · office@schule.co.me. Podaci zaključno sa 26.11.2026.</p>`;
