@@ -130,7 +130,7 @@ header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;
 <body>
 <header>
   <div class="ttl"><div class="emb" aria-hidden="true">★</div><div><h1>Crna Gora</h1><div class="sub">CG Civ: 25 opština, 1.850 heksova, stvarni podaci · <a href="https://schule.co.me">schule.co.me</a></div></div></div>
-  <div class="srch"><input id="q" list="ql" placeholder="Traži opštinu, čudo ili sveto mjesto" aria-label="Pretraga"><datalist id="ql"></datalist></div>
+  <div class="srch"><input id="q" list="ql" placeholder="Traži opštinu ili čudo" aria-label="Pretraga"><datalist id="ql"></datalist></div>
   <div class="pills" id="pills"></div>
 </header>
 <main>
@@ -174,8 +174,8 @@ const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture
 let hov=null,touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
 const cv=$('#map');let cx=cv.getContext('2d');const CX0=cx;
 
-let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=7'}
-Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=7').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
+let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=9'}
+Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=9').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
 
 function init(){
   hexes=D.hexes;nat=D.meta.nat;
@@ -231,7 +231,9 @@ function lensScale(){
   return scaleCache={k:lens,get,cols,lo,hi,tr,log,raw:[Math.min(...vals),Math.max(...vals)]};
 }
 function colorOf(h){
-  if(CATS[lens]&&h.muni){return CATS[lens].c[T[h.muni][lens.slice(4)]]||'#888'}
+  if(CATS[lens]&&h.muni){const r=T[h.muni],top=r[lens.slice(4)],base=CATS[lens].c[top];if(!base)return'#888';
+    const col=lens==='cat:_nacija'?top+' %':'Govori '+top.toLowerCase()+' %',sh=r[col]??50,t=Math.max(0,Math.min(1,(sh-30)/55));
+    const b=hex2rgb(base),dk=b.map(v=>v*.62);return rgb(mixc([236,231,220],dk,.18+.82*t))}
   if(lens==='terrain'||h.terrain==='sea'||h.terrain==='lake'&&lens!=='elev'){
     const base=TERR[h.terrain][0];if(h.terrain==='sea'||h.terrain==='lake')return base;
     const [r,g,b]=hex2rgb(base),k=1-Math.min(.25,(h.emean||0)/9000);return`rgb(${r*k|0},${g*k|0},${b*k|0})`}
@@ -239,7 +241,7 @@ function colorOf(h){
   return ramp(S.cols,(S.tr(v)-S.lo)/((S.hi-S.lo)||1));
 }
 function legend(){
-  if(CATS[lens]){$('#legend').innerHTML=`<b>${CATS[lens].l}</b><br>`+Object.entries(CATS[lens].c).map(([k,c])=>`<span style="display:inline-block;width:10px;height:10px;background:${c};border-radius:2px"></span> ${k}`).join('<br>')+'<br><span style="color:#9fb1bd">Popis 2023, MONSTAT</span>';return}
+  if(CATS[lens]){$('#legend').innerHTML=`<b>${CATS[lens].l}</b><br>`+Object.entries(CATS[lens].c).map(([k,c])=>{const d=hex2rgb(c).map(v=>v*.62);return`<span style="display:inline-block;width:34px;height:10px;border-radius:2px;background:linear-gradient(90deg,${rgb(mixc([236,231,220],d,.2))},${rgb(d)})"></span> ${k}`}).join('<br>')+'<br><span style="color:#9fb1bd">Tamnije = grupa ima veći udio u opštini, bljeđe = manji. Popis 2023, MONSTAT</span>';return}
   if(lens==='terrain'){const it=[[COV.forest,'Šuma (drveće = udio šume)'],[COV.grass,'Livade i pašnjaci'],[COV.shrub,'Makija i šiblje'],[COV.crop,'Obradiva polja'],[COV.built,'Naselja'],['#8e8576','Planine (snijeg iznad 1.900 m)'],['#2e8496','Plitko more i jezero']];
     $('#legend').innerHTML='<b>Teren</b><br>'+it.map(([c,l])=>`<span style="display:inline-block;width:11px;height:11px;background:${c};border-radius:3px;vertical-align:-1px"></span> ${l}`).join('<br>')+'<br><span style="color:#9fb1bd">ESA WorldCover 2021 i reljef · medalje = čuda, munje = elektrane, tačkice u barjaku = distrikti</span>';return}
   const S=lensScale(),name=lens.startsWith('m:')?lens.slice(2):HL[lens].l;
@@ -560,7 +562,7 @@ function drawHoly(W,H,placed){
 function holyAt(x,y){if(!showHoly)return null;let b=null,bd=1e9;for(const h of V.holy){if(!h._xy||!holyVisible(h))continue;const d=Math.hypot(h._xy[0]-x,h._xy[1]-y);if(d<h._xy[2]+3&&d<bd){b=h;bd=d}}return b}
 
 function buildSearch(){
-  const items=[...D.table.map(r=>[r['Opština'],'opština']),...D.wonders.map(w=>[w.name,'čudo']),...V.holy.map(h=>[h.n,HK[h.k]])];
+  const items=[...D.table.map(r=>[r['Opština'],'opština']),...D.wonders.map(w=>[w.name,'čudo'])];
   $('#ql').innerHTML=items.map(([n,k])=>`<option value="${esc(n)}">${esc(k)}</option>`).join('');
   $('#q').addEventListener('change',e=>{const v=e.target.value.trim();if(!v)return;
     if(T[v]){openCity(v);e.target.value='';return}
@@ -573,7 +575,7 @@ function buildSearch(){
   t.style.left=Math.min(b.left-r.left,r.width-270)+'px';t.style.top=(b.bottom-r.top+8)+'px'}));
 let MVC={};
 function muniVals(){if(MVC.k===lens)return MVC.v;const v={};
-  if(CATS[lens]){for(const r of D.table)v[r['Opština']]={t:r[lens.slice(4)]||'-'}}
+  if(CATS[lens]){for(const r of D.table){const top=r[lens.slice(4)],col=lens==='cat:_nacija'?top+' %':'Govori '+String(top).toLowerCase()+' %';v[r['Opština']]={t:top?top+' '+fmt(r[col])+'%':'-'}}}
   else if(lens.startsWith('m:')){const c=lens.slice(2),u=c.includes('€')?' €':c.includes('%')?'%':c.includes('‰')?'‰':'';const f1=x=>Math.abs(x)<10?(Math.abs(x)<.05?0:x).toLocaleString('sr-Latn-ME',{minimumFractionDigits:1,maximumFractionDigits:1}):fmt(x);for(const r of D.table)if(r[c]!=null)v[r['Opština']]={t:f1(r[c])+u}}
   else{const o=HL[lens];if(o&&o.v){const agg={},cnt={};for(const h of hexes){if(!h.muni)continue;const x=o.v(h);if(x==null)continue;agg[h.muni]=(agg[h.muni]||0)+x;cnt[h.muni]=(cnt[h.muni]||0)+1}
     for(const m in agg){const val=lens==='elev'?agg[m]/cnt[m]:agg[m];v[m]={t:lens==='elev'?fmt(val)+' m':lens==='gold'?fmt(val,0)+' mil. €':val>=1e6?fmt(val/1e6,1)+' mil.':val>=1e4?fmt(val/1e3,0)+'k':fmt(val)}}}}
@@ -590,7 +592,7 @@ function mini(){
 }
 $('#mini').addEventListener('click',e=>{if(!miniT)return;const[k,ox,oy]=miniT,wx=(e.offsetX-ox)/k,wy=(e.offsetY-oy)/k,r=cv.getBoundingClientRect();touched=true;tx=r.width/2-wx*s;ty=r.height/2-wy*s;draw()});
 const QL=[['terrain','Teren'],['pop','Stanovnici'],['gold','Zlato'],['m:Indeks bogatstva','Bogatstvo'],['nights','Turizam'],['science','Nauka'],['cat:_nacija','Nacija']];
-function lensbar(){$('#lensbar').innerHTML=`<button id="holyT" aria-pressed="${mythOn}" title="Prikaži kapelu na Lovćenu">Sveta mjesta</button>`+QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
+function lensbar(){$('#lensbar').innerHTML=QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')+`<button id="holyT" aria-pressed="${mythOn}" title="Prikaži kapelu na Lovćenu">Sveta mjesta</button>`}
 $('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){mythOn=!mythOn;e.target.setAttribute('aria-pressed',mythOn);mythShow();draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
 
 /* ---------- interaction ---------- */
@@ -648,7 +650,6 @@ function openCity(name,hx){
    <h3 style="font-size:19px;margin:16px 0 8px">Distrikti</h3><div class="dist">${c.districts.length?c.districts.map(d=>`<span><b>${esc(d.n)}</b><i>${esc(d.why)}</i></span>`).join(''):'<span class="muted">Nijedno pravilo za distrikt nije ispunjeno.</span>'}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Narod i jezik (Popis 2023)</h3>${mix(c.nation_mix,CATS['cat:_nacija'].c)}${mix(c.lang_mix,CATS['cat:_jezik'].c)}
    <h3 style="font-size:19px;margin:16px 0 8px">Čuda na teritoriji</h3>${W.length?W.map(w=>`<div>★ ${esc(w.name)} <span class="muted">${w.sitelinks} Wikipedia jezika</span></div>`).join(''):'<div class="muted">Nema među 20 najdokumentovanijih objekata.</div>'}
-   <h3 style="font-size:19px;margin:16px 0 8px">Sveta mjesta</h3>${HS.length?HS.map(h=>`<div>${h.star?'✦':'·'} ${esc(h.n)} <span class="muted">${HK[h.k]}, ${h.sl} jezika</span></div>`).join(''):'<div class="muted">Wikidata nema vjerski objekat sa koordinatama u ovoj opštini.</div>'}
   </div><div>
    <h3 style="font-size:19px;margin-bottom:8px">Građani</h3>
    <p style="margin:0 0 6px">Fakultet ima <b>1 od ${fmt(z.one_in,1)}</b> stanovnika 15+ (${fmt(z.higher_share,1)}%), u CG 1 od ${fmt(z.nat_one_in,1)}. Programira <b>${fmt(z.prog,1)}%</b> (CG ${fmt(nat.prog_pct,1)}%).</p>
@@ -658,6 +659,7 @@ function openCity(name,hx){
    <h3 style="font-size:19px;margin:16px 0 6px">Svi podaci opštine</h3>
    <p class="muted" style="margin:0 0 6px">Traka pokazuje gdje je opština između najmanje i najveće vrijednosti među 25 opština; crtica je Crna Gora.</p>
    ${allData(name)}
+   <h3 style="font-size:19px;margin:18px 0 8px">Sveta mjesta</h3>${HS.length?HS.map(h=>`<div>${h.star?'✦':'·'} ${esc(h.n)} <span class="muted">${HK[h.k]}, ${h.sl} jezika</span></div>`).join(''):'<div class="muted">Wikidata nema vjerski objekat sa koordinatama u ovoj opštini.</div>'}
   </div></div>`;
   $('#city').classList.add('open');$('#cityBox .x').onclick=closeCity;$('#cityBox .x').focus();
 }
