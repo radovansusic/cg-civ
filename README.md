@@ -1,8 +1,16 @@
 # CG Civ - Crna Gora na heksovima
 
+**Montenegro as a Civilization map.** 25 municipalities on 1,850 hexes, built only from real public data: MONSTAT, Census 2023, the employment agency, OpenStreetMap and Wikidata. Gold is the wage bill, Science is university graduates, Wonders are the most-documented landmarks.
+
 Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim podacima, preračunatim na mrežu od 1.850 heksova od po oko 8 km².
 
-Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio Schule d.o.o., Podgorica.
+![CG Civ - mapa terena sa gradovima i čudima](docs/mapa.png)
+
+| Pogled grada | Istraživač |
+|---|---|
+| ![Pogled grada Kotor](docs/pogled-grada.png) | ![Istraživač: fakultet i plata po opštinama](docs/istrazivac.png) |
+
+Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://x.com/SchuleDR), Podgorica. Kontakt: radovan.susic@gmail.com
 
 ## Šta ima
 
