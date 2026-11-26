@@ -24,7 +24,9 @@ header{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:8px 1
 .ttl{display:flex;align-items:center;gap:10px}
 header h1{font-size:24px;font-variant:small-caps;letter-spacing:.08em;color:#f3ead2}header .sub{font-size:13px;color:#a9b4bc}
 header .sub a{color:var(--gold)}
-.pills{display:flex;flex-wrap:wrap;gap:4px 14px;margin-inline-start:auto}
+.srch{margin-inline-start:auto}.srch input{width:260px;max-width:60vw;min-height:36px;border-radius:18px;border:1px solid #3a4f62;background:#0d1822;color:#ece5d3;padding:6px 14px;font-size:14px}
+.srch input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.pills{display:flex;flex-wrap:wrap;gap:4px 14px}
 .pill{font-size:14px;white-space:nowrap;color:#cfd6db;display:flex;align-items:center;gap:6px}
 .pill i{width:12px;height:12px;border-radius:50%;display:inline-block;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
 .pill b{font-variant-numeric:tabular-nums;color:#fff}
@@ -37,6 +39,7 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 
 #lensbar{position:absolute;right:12px;bottom:12px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;max-width:calc(100% - 230px);padding:5px;background:rgba(12,22,32,.85);border:1px solid var(--gold2);border-radius:8px}
 #lensbar button{border:1px solid #3a4f62;background:linear-gradient(#22364a,#172636);color:#e6dfcd;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer;min-height:36px}
 #lensbar button[aria-pressed=true]{background:linear-gradient(#7a5a1e,#5a3f12);border-color:var(--gold);color:#fff}
+#lensbar #holyT{border-color:#b8862a}#lensbar #holyT[aria-pressed=true]{background:linear-gradient(#efe2bd,#cdb47a);color:#2a1c08}
 #legend .bar{height:10px;border-radius:5px;margin:6px 0 2px}
 #legend .ends{display:flex;justify-content:space-between;gap:10px}
 #tip{position:absolute;pointer-events:none;background:#15222e;color:#ece5d3;border:1px solid var(--gold2);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.35);display:none;max-width:260px;z-index:3}
@@ -74,13 +77,16 @@ th:first-child,td:first-child{text-align:start;position:sticky;left:0;background
 th{cursor:pointer;font-weight:700;font-size:13px;vertical-align:bottom}
 tr.hl td{background:#2b2414}
 tbody tr{cursor:pointer}
-#city{position:fixed;inset:0;background:rgba(5,15,22,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#city{position:fixed;top:0;right:0;bottom:0;width:min(600px,100%);display:none;z-index:10}
 #city.open{display:flex}
-#city .box{background:var(--panel);color:var(--ink);border:2px solid var(--gold2);border-radius:14px;max-width:820px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#city .box{background:var(--panel);color:var(--ink);border-left:2px solid var(--gold2);width:100%;height:100%;overflow:auto;box-shadow:-12px 0 40px rgba(0,0,0,.55)}
 #city .top{background:linear-gradient(120deg,#6e1446,#2a0a1e 70%,#141f2a);border-bottom:2px solid var(--gold2);color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
 #city .top h2{font-size:36px;font-variant:small-caps;letter-spacing:.05em;color:#f6ecd2}
+.medals{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.med{width:62px;text-align:center;font-size:11px;color:#e8dcc0}
+.med b{display:grid;place-items:center;width:38px;height:38px;margin:0 auto 2px;border-radius:50%;font:700 14px Caladea,serif;color:#2a1c08;border:2px solid rgba(0,0,0,.35);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.m1 b{background:radial-gradient(circle at 35% 30%,#fff1b8,#c99a2e)}.m2 b{background:radial-gradient(circle at 35% 30%,#ffffff,#a9b0b8)}.m3 b{background:radial-gradient(circle at 35% 30%,#f3c9a0,#a8673a)}
 #city .x{margin-inline-start:auto;width:44px;height:44px;border-radius:10px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px;cursor:pointer}
-#city .body{padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+#city .body{padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
 .yields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .y{border-radius:10px;padding:8px;color:#fff}
 .y b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.y span{font-size:13px}
@@ -95,7 +101,7 @@ tbody tr{cursor:pointer}
 @media(max-width:900px){main{grid-template-columns:minmax(0,1fr);height:auto}#mapwrap{height:72vh}aside{border-inline-start:0}.pills{margin-inline-start:0}#mini{width:120px;height:100px}#lensbar{max-width:calc(100% - 150px)}#lensbar button{padding:4px 7px;font-size:13px}}
 @media(max-width:600px){#city .body{grid-template-columns:minmax(0,1fr)}header h1{font-size:20px}#city .top h2{font-size:28px}
 header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;height:28px;font-size:14px}.pills{gap:2px 10px}.pill{font-size:12px}
-#legend{font-size:11px;padding:6px 8px;max-width:52%;line-height:1.35;max-height:96px;overflow:auto}#legend b{font-size:13px}#mini{display:none}
+.srch{order:3;width:100%}.srch input{width:100%;max-width:none}#legend{font-size:11px;padding:6px 8px;max-width:52%;line-height:1.35;max-height:96px;overflow:auto}#legend b{font-size:13px}#mini{display:none}
 #lensbar{left:8px;right:8px;bottom:8px;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start}#lensbar button{flex:none}
 .zoom{right:8px;top:8px}.zoom button{width:40px;height:40px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -104,6 +110,7 @@ header{padding:6px 10px;gap:4px 10px}header .sub{font-size:12px}.emb{width:28px;
 <body>
 <header>
   <div class="ttl"><div class="emb" aria-hidden="true">★</div><div><h1>Crna Gora</h1><div class="sub">CG Civ: 25 opština, 1.850 heksova, stvarni podaci · <a href="https://schule.co.me">schule.co.me</a></div></div></div>
+  <div class="srch"><input id="q" list="ql" placeholder="Traži opštinu, čudo ili sveto mjesto" aria-label="Pretraga"><datalist id="ql"></datalist></div>
   <div class="pills" id="pills"></div>
 </header>
 <main>
@@ -155,7 +162,7 @@ function init(){
   for(const r of D.table)T[r['Opština']]=r;
   $('#pills').innerHTML=[['Stanovnici',fmt(nat.pop2023),'#e9e4d8'],['Zlato',fmt(nat.wagebill_meur)+' mil. €',YC.gold],['Proizvodnja: firme',fmt(nat.firms2025),YC.prod],['Nauka: fakultet',fmt(nat.higher_share*100,1)+'%',YC.science],['Kultura: noćenja',fmt(nat.nights2025/1e6,1)+' mil.',YC.culture]]
     .map(([a,b,c])=>`<span class="pill" title="${a}"><i style="background:${c}"></i>${a.split(':')[0]} <b>${b}</b></span>`).join('');
-  prepWorld();lensbar();buildLenses();buildAdvisors();buildExplorer();buildSources();resize();fit();
+  prepWorld();lensbar();buildLenses();buildSearch();buildAdvisors();buildExplorer();buildSources();resize();fit();
 }
 
 /* ---------- lenses ---------- */
@@ -187,7 +194,7 @@ function buildLenses(){
   $('#lensList').innerHTML=out;
   $('#lensList').addEventListener('click',e=>{const b=e.target.closest('.lens');if(b)setLens(b.dataset.k)});
 }
-function setLens(k){lens=k;document.querySelectorAll('.lens,#lensbar button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));draw()}
+function setLens(k){lens=k;document.querySelectorAll('.lens,#lensbar button[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));draw()}
 function hex2rgb(c){c=c.replace('#','');return[0,2,4].map(i=>parseInt(c.slice(i,i+2),16))}
 function ramp(cols,t){t=Math.max(0,Math.min(1,t));const n=cols.length-1,i=Math.min(n-1,Math.floor(t*n)),f=t*n-i,a=hex2rgb(cols[i]),b=hex2rgb(cols[i+1]);return`rgb(${a.map((v,j)=>Math.round(v+(b[j]-v)*f)).join(',')})`}
 let scaleCache={};
@@ -254,7 +261,7 @@ function baseCol(o){
   const ul=AK[(o.q-1)+','+(o.r+1)]||AK[o.q+','+(o.r+1)],lr=AK[(o.q+1)+','+(o.r-1)]||AK[o.q+','+(o.r-1)];
   const dz=((lr?lr.e:o.e)-(ul?ul.e:o.e));const k=1+Math.max(-.2,Math.min(.2,dz/900))+(hsh(o.q,o.r)-.5)*.07;
   c=c.map(v=>Math.min(255,v*k));
-  if(!o.cg)c=mixc(c,[110,112,110],.5).map(v=>v*.72);
+  if(!o.cg){const l=c[0]*.3+c[1]*.59+c[2]*.11;c=mixc(c,[l*1.02,l*1.04,l*1.1],.82).map(v=>v*.86)}
   return rgb(c);
 }
 function glyphs(o){
@@ -375,7 +382,7 @@ function paintStatic(W,H){
     cx.strokeStyle=rv.cg?(terr?'#4fa6d4':'rgba(110,190,230,.75)'):'rgba(90,140,170,.5)';cx.lineWidth=w;cx.stroke()}
   // 5. ikone terena
   if(s>3.2){const ga=terr?1:.28;for(const o of ALL){if(!o.glyph.length||!vis(o))continue;const x=o.px*s+tx,y=o.py*s+ty;
-    cx.globalAlpha=o.cg?ga:ga*.45;for(const[n,dx,dy,sc]of o.glyph){const z=R*sc*(n==='city'?1:.95);cx.drawImage(SPR[n],x+dx*R-z*.5,y+dy*R-z*.5-(n==='mtn'||n==='mtnS'?z*.05:0),z,z)}}
+    cx.globalAlpha=o.cg?ga:ga*.6;for(const[n,dx,dy,sc]of o.glyph){const z=R*sc*(n==='city'?1:.95);cx.drawImage(SPR[n],x+dx*R-z*.5,y+dy*R-z*.5-(n==='mtn'||n==='mtnS'?z*.05:0),z,z)}}
     cx.globalAlpha=1}
   // 6. granice opština (isprekidano) i državna granica (Civ teritorija)
   const mun=new Path2D(),nat2=new Path2D();
@@ -392,6 +399,9 @@ function paintStatic(W,H){
   const [x0,x1,y0,y1]=worldBox,cxm=((x0+x1)/2)*s+tx,cym=((y0+y1)/2)*s+ty,rad=Math.max(x1-x0,y1-y0)/2*s;
   const fg=cx.createRadialGradient(cxm,cym,rad*.62,cxm,cym,rad*1.02);fg.addColorStop(0,'rgba(9,22,36,0)');fg.addColorStop(.7,'rgba(9,22,36,.55)');fg.addColorStop(1,'rgba(9,22,36,1)');
   cx.fillStyle=fg;cx.fillRect(0,0,W,H);
+  for(let i=0;i<46;i++){const a=i/46*Math.PI*2+hsh(i,7)*.2,rr2=rad*(1+hsh(i,3)*.25),x=cxm+Math.cos(a)*rr2,y=cym+Math.sin(a)*rr2;
+    for(let j=0;j<4;j++){const bx=x+(hsh(i,j)-.5)*rad*.14,by=y+(hsh(j,i)-.5)*rad*.08,br=rad*(.05+hsh(i+j,11)*.06);
+      const cg=cx.createRadialGradient(bx,by-br*.3,br*.1,bx,by,br);cg.addColorStop(0,'rgba(150,168,190,.09)');cg.addColorStop(1,'rgba(150,168,190,0)');cx.fillStyle=cg;cx.beginPath();cx.arc(bx,by,br,0,7);cx.fill()}}
 }
 function overlay(W,H){
   const R=s,terr=lens==='terrain';
@@ -408,10 +418,12 @@ function overlay(W,H){
     cx.fillStyle='#1b2733';cx.strokeStyle='#d9a441';cx.lineWidth=1.5;cx.beginPath();cx.arc(x,y,z,0,7);cx.fill();cx.stroke();
     cx.fillStyle='#ffd84a';const k=z*.75;cx.beginPath();cx.moveTo(x+k*.15,y-k);cx.lineTo(x-k*.5,y+k*.12);cx.lineTo(x-k*.02,y+k*.12);cx.lineTo(x-k*.2,y+k);cx.lineTo(x+k*.5,y-k*.12);cx.lineTo(x+k*.02,y-k*.12);cx.closePath();cx.fill()}
   // 10. čuda
-  const placed=[];for(const w of D.wonders){const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(6,s*.5);if(x<-40||y<-40||x>W+40||y>H+40)continue;medal(x,y,z);
+  for(const h of V.holy)h._xy=null;
+  const placed=[],HS=new Set(V.holy.filter(h=>h.star).map(h=>h.n));const HL2=drawHoly(W,H,placed);for(const w of D.wonders){if(showHoly&&HS.has(w.name))continue;const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(6,s*.5);if(x<-40||y<-40||x>W+40||y>H+40)continue;medal(x,y,z);
     if(s<8.5)continue;const fs=Math.max(11,Math.min(14,s*.55));cx.font=`italic 700 ${fs}px Caladea,serif`;const lw=cx.measureText(w.name).width;
     if(placed.some(p=>Math.abs(p[0]-x)<(p[2]+lw)/2+6&&Math.abs(p[1]-y)<fs+4))continue;placed.push([x,y,lw]);
     cx.textAlign='center';cx.fillStyle='#ffe9a8';cx.strokeStyle='rgba(10,10,10,.8)';cx.lineWidth=3;cx.strokeText(w.name,x,y+z+fs);cx.fillText(w.name,x,y+z+fs)}
+  HL2.forEach(f=>f());
   // 11. gradski barjaci
   for(const{c,x,y,fs,bh,popT,wp,nm,wn,ds,star,bw,bx,by}of BB){
     const [c1,c2]=regCol(c.name);
@@ -423,6 +435,11 @@ function overlay(W,H){
     let px2=bx+wp+4;if(star){starP(px2+star/2,by+bh/2,star*.42,c.name==='Podgorica'?'#ffd166':'#e8e8e8');px2+=star}
     cx.font=`700 ${fs}px Caladea,serif`;try{cx.letterSpacing='1px'}catch(e){}cx.textAlign='left';cx.fillStyle='#f6ecd2';cx.fillText(nm,px2+4,by+bh/2+1);try{cx.letterSpacing='0px'}catch(e){}
     let dx=px2+wn;ds.forEach(d=>{cx.fillStyle=DCOL[d.n]||'#999';cx.beginPath();cx.arc(dx+fs*.28,by+bh/2,fs*.24,0,7);cx.fill();cx.strokeStyle='rgba(0,0,0,.5)';cx.lineWidth=1;cx.stroke();dx+=fs*.62});
+    cx.textBaseline='alphabetic'}
+  // 11b. stanovnici po heksu izabrane opštine
+  if(sel&&s>24){cx.font=`700 ${Math.min(12,s*.3)}px Carlito,sans-serif`;cx.textAlign='center';cx.textBaseline='middle';
+    for(const h of hexes){if(h.muni!==sel||h.pop<30||cityByKey[h.q+','+h.r])continue;const x=h.px*s+tx,y=h.py*s+ty+s*.55;if(x<0||y<0||x>W||y>H)continue;
+      const t='≈'+(h.pop>=1000?fmt(h.pop/1000,1)+'k':fmt(h.pop));const w=cx.measureText(t).width+8;cx.fillStyle='rgba(12,22,32,.82)';rr(x-w/2,y-7,w,14,7);cx.fill();cx.fillStyle='#f3ead2';cx.fillText(t,x,y+1)}
     cx.textBaseline='alphabetic'}
   // 12. prinosi kad je zumirano
   if(s>70&&terr)for(const h of hexes){if(!h.muni)continue;const x=h.px*s+tx,y=h.py*s+ty;if(x<0||y<0||x>W||y>H)continue;
@@ -447,6 +464,46 @@ function rr(x,y,w,h,r){r=Math.min(r,h/2,w/2);cx.beginPath();cx.moveTo(x+r,y);cx.
 function starP(x,y,r,col){cx.beginPath();for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,q=i%2?r*.45:r;cx.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}cx.closePath();cx.fillStyle=col;cx.fill()}
 function medal(x,y,r){const g=cx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);g.addColorStop(0,'#fff1b8');g.addColorStop(1,'#b8862a');
   cx.beginPath();cx.arc(x,y,r,0,7);cx.fillStyle=g;cx.fill();cx.strokeStyle='#3a2600';cx.lineWidth=1.2;cx.stroke();starP(x,y,r*.62,'#5a3a00')}
+/* sveta mjesta: značka u obliku heksa sa simbolom; ista boja za sve vjere */
+let showHoly=true;
+const HK={orthodox:'Pravoslavni hram',catholic:'Katolički hram',islam:'Džamija',memorial:'Memorijalno mjesto'};
+function holyGlyph(g,k,z){g.save();g.fillStyle='#3a2a12';g.strokeStyle='#3a2a12';g.lineWidth=z*.09;const u=z*.55;
+  if(k==='islam'){g.beginPath();g.arc(-u*.15,u*.15,u*.48,Math.PI,0);g.lineTo(u*.33,u*.62);g.lineTo(-u*.63,u*.62);g.closePath();g.fill();g.fillRect(u*.5,-u*.65,u*.2,u*1.27);g.beginPath();g.arc(u*.6,-u*.82,u*.17,0,7);g.fill()}
+  else if(k==='memorial'){g.fillRect(-u*.75,u*.45,u*1.5,u*.2);g.fillRect(-u*.65,-u*.35,u*1.3,u*.16);for(let i=0;i<4;i++)g.fillRect(-u*.58+i*u*.38,-u*.2,u*.16,u*.65);g.beginPath();g.moveTo(-u*.75,-u*.38);g.lineTo(0,-u*.78);g.lineTo(u*.75,-u*.38);g.closePath();g.fill()}
+  else{const cat=k==='catholic';g.fillRect(-u*.55,-u*.05,u*1.1,u*.7);
+    if(cat){g.beginPath();g.moveTo(-u*.25,-u*.05);g.lineTo(0,-u*.75);g.lineTo(u*.25,-u*.05);g.closePath();g.fill();g.fillRect(-u*.04,-u*1.02,u*.08,u*.3);g.fillRect(-u*.13,-u*.93,u*.26,u*.07)}
+    else{g.beginPath();g.arc(0,-u*.05,u*.36,Math.PI,0);g.fill();g.fillRect(-u*.04,-u*.82,u*.08,u*.42);g.fillRect(-u*.16,-u*.7,u*.32,u*.07)}
+    g.fillStyle='#f2e6c6';g.beginPath();g.arc(0,u*.42,u*.14,Math.PI,0);g.lineTo(u*.14,u*.65);g.lineTo(-u*.14,u*.65);g.closePath();g.fill()}
+  g.restore()}
+function holyBadge(x,y,z,k,star){cx.save();cx.translate(x,y);
+  cx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;cx.lineTo(Math.cos(a)*z,Math.sin(a)*z)}cx.closePath();
+  const g=cx.createLinearGradient(0,-z,0,z);g.addColorStop(0,star?'#fff6d8':'#f5eedd');g.addColorStop(1,star?'#e2c27a':'#cfc3a4');cx.fillStyle=g;
+  cx.shadowColor='rgba(0,0,0,.5)';cx.shadowBlur=4;cx.shadowOffsetY=1;cx.fill();cx.shadowColor='transparent';
+  cx.strokeStyle=star?'#b8862a':'#7d6b4a';cx.lineWidth=star?Math.max(1.5,z*.16):1;cx.stroke();
+  if(star){cx.strokeStyle='rgba(255,232,160,.55)';cx.lineWidth=Math.max(1,z*.08);cx.beginPath();for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/2;cx.lineTo(Math.cos(a)*z*1.28,Math.sin(a)*z*1.28)}cx.closePath();cx.stroke()}
+  holyGlyph(cx,k,z);cx.restore()}
+function holyVisible(h){return showHoly&&(h.star||s>9||(s>6.5&&h.sl>=7))}
+function drawHoly(W,H,placed){
+  const later=[];if(!showHoly)return later;const list=V.holy.filter(holyVisible);
+  for(const h of [...list].reverse()){const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=h.star?Math.max(8,Math.min(15,s*.62)):Math.max(5.5,Math.min(11,s*.42));if(x<-30||y<-30||x>W+30||y>H+30)continue;
+    h._xy=[x,y,z];later.push(()=>holyBadge(x,y,z,h.k,h.star))}
+  for(const h of list){if(!h._xy)continue;const[x,y,z]=h._xy;if(!(h.star&&s>5.5)&&!(s>24))continue;
+    const fs=h.star?Math.max(11,Math.min(14,s*.55)):Math.max(10,Math.min(12,s*.4)),t=h.n;cx.font=`italic 700 ${fs}px Caladea,serif`;const lw=cx.measureText(t).width;
+    if(placed.some(p=>Math.abs(p[0]-x)<(p[2]+lw)/2+6&&Math.abs(p[1]-(y+z+fs))<fs+3))continue;placed.push([x,y+z+fs,lw]);
+    later.push(()=>{cx.font=`italic 700 ${fs}px Caladea,serif`;cx.textAlign='center';cx.strokeStyle='rgba(10,10,10,.85)';cx.lineWidth=3;cx.strokeText(t,x,y+z+fs);cx.fillStyle=h.star?'#fff1c8':'#efe6d0';cx.fillText(t,x,y+z+fs)})}
+  return later;
+}
+function holyAt(x,y){if(!showHoly)return null;let b=null,bd=1e9;for(const h of V.holy){if(!h._xy||!holyVisible(h))continue;const d=Math.hypot(h._xy[0]-x,h._xy[1]-y);if(d<h._xy[2]+3&&d<bd){b=h;bd=d}}return b}
+
+function buildSearch(){
+  const items=[...D.table.map(r=>[r['Opština'],'opština']),...D.wonders.map(w=>[w.name,'čudo']),...V.holy.map(h=>[h.n,HK[h.k]])];
+  $('#ql').innerHTML=items.map(([n,k])=>`<option value="${esc(n)}">${esc(k)}</option>`).join('');
+  $('#q').addEventListener('change',e=>{const v=e.target.value.trim();if(!v)return;
+    if(T[v]){openCity(v);e.target.value='';return}
+    const w=D.wonders.find(x=>x.name===v),h=V.holy.find(x=>x.n===v);let px,py;
+    if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];showHoly=true;lensbar()}else return;
+    const r=cv.getBoundingClientRect();touched=true;s=Math.max(s,16);tx=r.width/2-px*s;ty=r.height/2-py*s;draw();
+    setTimeout(()=>{if(h&&h._xy){tip(h._xy[0],h._xy[1])}else tip(r.width/2,r.height/2)},80);e.target.value=''})}
 /* pregledna mapa */
 let miniImg=null,miniT=null;
 function mini(){
@@ -459,8 +516,8 @@ function mini(){
 }
 $('#mini').addEventListener('click',e=>{if(!miniT)return;const[k,ox,oy]=miniT,wx=(e.offsetX-ox)/k,wy=(e.offsetY-oy)/k,r=cv.getBoundingClientRect();touched=true;tx=r.width/2-wx*s;ty=r.height/2-wy*s;draw()});
 const QL=[['terrain','Teren'],['pop','Stanovnici'],['gold','Zlato'],['m:Indeks bogatstva','Bogatstvo'],['nights','Turizam'],['science','Nauka'],['cat:_nacija','Nacija']];
-function lensbar(){$('#lensbar').innerHTML=QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
-$('#lensbar').addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
+function lensbar(){$('#lensbar').innerHTML=`<button id="holyT" aria-pressed="${showHoly}" title="Prikaži ili sakrij sveta mjesta">Sveta mjesta</button>`+QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
+$('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){showHoly=!showHoly;e.target.setAttribute('aria-pressed',showHoly);draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
 
 /* ---------- interaction ---------- */
 function pick(sx,sy){const px=(sx-tx)/s,py=(sy-ty)/s;let r=-py/1.5,q=px/SQ3-r/2,z=-q-r;let rq=Math.round(q),rr2=Math.round(r),rz=Math.round(z);
@@ -489,7 +546,9 @@ function hexLines(h){
   Stanovnici <b class="num">${fmt(h.pop)}</b><br>Hrana ${h.food} · Proizvodnja ${h.prod} · Zlato ${fmt(h.gold,1)}<br>Nauka ${h.science} · Kultura ${h.culture} · Vjera ${h.faith}`+
   (h.mw?`<br>Elektrana ${fmt(h.mw)} MW`:'')+(h.lodging?`<br>Smještajnih objekata ${h.lodging}`:'');
 }
-function tip(x,y){const h=pick(x,y),t=$('#tip');if(!h){t.style.display='none';return}const c=cityByKey[h.q+','+h.r];
+function tip(x,y){const t=$('#tip'),hs=holyAt(x,y);
+  if(hs){t.innerHTML=`<b>${esc(hs.n)}</b><br>${HK[hs.k]} · ${esc(hs.m)}<br><span class="num">${hs.sl}</span> jezika na Wikipediji${hs.note?'<br>'+esc(hs.note):''}`;t.style.display='block';const W=cv.getBoundingClientRect().width;t.style.left=Math.min(x+14,W-270)+'px';t.style.top=(y+14)+'px';return}
+  const h=pick(x,y);if(!h){t.style.display='none';return}const c=cityByKey[h.q+','+h.r];
   t.innerHTML=(c?`<b>${esc(c.name)}</b> - grad, klik za pogled grada<br>`:'')+hexLines(h);t.style.display='block';
   const W=cv.getBoundingClientRect().width;t.style.left=Math.min(x+14,W-270)+'px';t.style.top=(y+14)+'px'}
 function hexInfo(h){$('#hexInfo').innerHTML=`<div class="card" style="margin-top:12px"><h3>Izabrani heks</h3>${hexLines(h)}<p class="muted">Heks ima oko 8 km². Brojke opštine raspoređene su po heksovima kako piše u Izvorima.</p></div>`;sel=h.muni;draw()}
@@ -497,17 +556,22 @@ function hexInfo(h){$('#hexInfo').innerHTML=`<div class="card" style="margin-top
 /* ---------- city view ---------- */
 const rank=(m,c,desc=true)=>{const arr=D.table.filter(r=>r[c]!=null).sort((a,b)=>desc?b[c]-a[c]:a[c]-b[c]);const i=arr.findIndex(r=>r['Opština']===m);return i<0?'':`${i+1}. od ${arr.length}`};
 function openCity(name){
-  const c=D.cities.find(x=>x.name===name),t=T[name],z=c.citizens;sel=name;draw();
+  const c=D.cities.find(x=>x.name===name),t=T[name],z=c.citizens;sel=name;$('#tip').style.display='none';
+  {const r=cv.getBoundingClientRect(),dw=Math.min(600,innerWidth),ov=Math.max(0,dw-(innerWidth-r.right)),vw=Math.max(200,r.width-ov);touched=true;s=Math.max(s,Math.min(22,r.height/40));tx=vw*.5-SQ3*(c.q+c.r/2)*s;ty=r.height*.5+1.5*c.r*s;draw()}
+  const med=[['Stanovnici','Stanovnici 2023'],['Zlato','Masa zarada mil. €'],['Plata','Neto plata 2025 €'],['Bogatstvo','Indeks bogatstva']].map(([l,k])=>{const rk=D.table.filter(r=>r[k]!=null).sort((a,b)=>b[k]-a[k]).findIndex(r=>r['Opština']===name)+1;
+    return rk?`<div class="med ${rk<=3?'m1':rk<=10?'m2':'m3'}"><b>${rk}.</b><span>${l}</span></div>`:''}).join('');
+  const HS=V.holy.filter(h=>h.m===name).slice(0,6);
   const ys=[['Hrana',c.food,'food'],['Proizvodnja',c.prod,'prod'],['Zlato (mil. €)',c.gold,'gold'],['Nauka',c.science,'science'],['Kultura',c.culture,'culture'],['Vjera',c.faith,'faith']];
   const W=D.wonders.filter(w=>w.muni===name);
   const pops=[['1991',c.pop1991],['2011',c.pop2011],['2023',c.pop]].filter(p=>p[1]);const pm=Math.max(...pops.map(p=>p[1]));
   const kv=[['Indeks bogatstva (procjena)','Indeks bogatstva',''],['Neto plata 2025','Neto plata 2025 €',' €'],['Neto plata 01-09.2026','Neto plata 01-09.2026 €',' €'],['Masa zarada po stanovniku','Masa zarada po st. €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost ZZZCG jun 2026','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2025 (ukupno)','Noćenja 2025',''],['Hoteli avg-sep 2026','Hoteli noćenja avg-sep 2026',''],['Rast hotela avg-sep 2026','Rast hotela avg-sep 2026 %','%'],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2025','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
-  $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div></div><button class="x" aria-label="Zatvori">×</button></div>
+  $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div><div class="medals">${med}</div></div><button class="x" aria-label="Zatvori">×</button></div>
   <div class="body"><div>
    <h3 style="font-size:19px;margin-bottom:8px">Prinosi</h3><div class="yields">${ys.map(([l,v,k])=>`<div class="y" style="background:${YC[k]};${k==='faith'?'color:#1c1a17':''}"><b>${fmt(v,k==='gold'?1:0)}</b><span>${l}</span></div>`).join('')}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Distrikti</h3><div class="dist">${c.districts.length?c.districts.map(d=>`<span><b>${esc(d.n)}</b><i>${esc(d.why)}</i></span>`).join(''):'<span class="muted">Nijedno pravilo za distrikt nije ispunjeno.</span>'}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Narod i jezik (Popis 2023)</h3>${mix(c.nation_mix,CATS['cat:_nacija'].c)}${mix(c.lang_mix,CATS['cat:_jezik'].c)}
    <h3 style="font-size:19px;margin:16px 0 8px">Čuda na teritoriji</h3>${W.length?W.map(w=>`<div>★ ${esc(w.name)} <span class="muted">${w.sitelinks} Wikipedia jezika</span></div>`).join(''):'<div class="muted">Nema među 20 najdokumentovanijih objekata.</div>'}
+   <h3 style="font-size:19px;margin:16px 0 8px">Sveta mjesta</h3>${HS.length?HS.map(h=>`<div>${h.star?'✦':'·'} ${esc(h.n)} <span class="muted">${HK[h.k]}, ${h.sl} jezika</span></div>`).join(''):'<div class="muted">Wikidata nema vjerski objekat sa koordinatama u ovoj opštini.</div>'}
   </div><div>
    <h3 style="font-size:19px;margin-bottom:8px">Građani</h3>
    <p style="margin:0 0 6px">Fakultet ima <b>1 od ${fmt(z.one_in,1)}</b> stanovnika 15+ (${fmt(z.higher_share,1)}%), u CG 1 od ${fmt(z.nat_one_in,1)}. Programira <b>${fmt(z.prog,1)}%</b> (CG ${fmt(nat.prog_pct,1)}%).</p>
@@ -547,6 +611,9 @@ function buildAdvisors(){
    ['Socijalni savjetnik','m:MOP korisnici na 1.000 st.',`Materijalno obezbjeđenje porodice (MOP) je najzastupljenije tamo gdje je nezaposlenost najveća. Ljekara na 10.000 stanovnika najviše ima ${esc(top('Ljekari na 10.000 st.',1)[0]['Opština'])}.`,'Najviše korisnika MOP na 1.000',li(top('MOP korisnici na 1.000 st.'),'MOP korisnici na 1.000 st.','')],
    ['Savjetnik za bogatstvo','m:Indeks bogatstva',`Indeks bogatstva je CG Civ procjena, ne BDP: spaja masu zarada po stanovniku, firme na 1.000, sezonske stanove i fakultet. Plate januar-septembar 2026 najviše su porasle u ${esc(top('Rast plate 2026/2025 %',1)[0]['Opština'])} (+${fmt(top('Rast plate 2026/2025 %',1)[0]['Rast plate 2026/2025 %'],1)}%), a pale u ${esc(top('Rast plate 2026/2025 %',1,false)[0]['Opština'])} (${fmt(top('Rast plate 2026/2025 %',1,false)[0]['Rast plate 2026/2025 %'],1)}%).`,'Najveći indeks bogatstva',li(top('Indeks bogatstva'),'Indeks bogatstva','',2)],
    ['Savjetnik za narode i jezike','cat:_nacija',`Prema Popisu 2023, najbrojnija grupa u opštini su Crnogorci u ${D.table.filter(r=>r._nacija==='Crnogorci').length}, Srbi u ${D.table.filter(r=>r._nacija==='Srbi').length}, Bošnjaci u ${D.table.filter(r=>r._nacija==='Bošnjaci').length} i Albanci u ${D.table.filter(r=>r._nacija==='Albanci').length} opština. Srpski je najčešći jezik u govoru u ${D.table.filter(r=>r._jezik==='Srpski').length} od 25 opština.`,'Najveći udio Rusa (Popis 2023)',li(top('Rusi %'),'Rusi %','%')],
+   ['Savjetnik za vjeru i baštinu','faith',(()=>{const H=V.holy,c=k=>H.filter(h=>h.k===k).length,t=k=>H.filter(h=>h.k===k)[0];
+     return `Na mapi je ${H.length} vjerskih i memorijalnih objekata iz Wikidata: ${c('orthodox')} pravoslavnih, ${c('catholic')} katoličkih, ${c('islam')} džamija i Njegošev mauzolej na Lovćenu. Najpoznatiji po vjeri, mjereno brojem jezika na Wikipediji: ${esc(t('orthodox').n)} (${t('orthodox').sl}), ${esc(t('catholic').n)} (${t('catholic').sl}), ${esc(t('islam').n)} (${t('islam').sl}). Zlatne značke su sveta čuda: Ostrog, Cetinjski manastir, mauzolej na mjestu Njegoševe kapele i najpoznatiji hram svake vjere.`})(),
+     'Najpoznatija sveta mjesta','<ol>'+[...V.holy].sort((a,b)=>b.sl-a.sl).slice(0,6).map(h=>`<li>${esc(h.n)} <span class="num">${h.sl}</span> <span class="muted">${esc(h.m)}</span></li>`).join('')+'</ol>'],
    ['Investicioni signali (Schule)','m:Rast firmi 2024-25 %',`Pravilo 1: broj firmi raste brže od CG (${fmt(fg,1)}%), a plata je ispod CG (${nat.net_wage2025} €). Pravilo 2: turizam iznad 20 noćenja po stanovniku, a fakultet ispod CG: ${sig2.map(r=>esc(r['Opština'])).join(', ')||'nema'}. Ovo su signali iz podataka, ne preporuka.`,'Pravilo 1 ispunjavaju',li(sig1,'Rast firmi 2024-25 %','%')],
   ];
   $('#p-advisors').innerHTML=A.map(([t,l,f,h,list])=>`<div class="card"><h3>${t}</h3><p class="find">${f}</p><div class="muted">${h}</div>${list}<button class="go" data-l="${esc(l)}">Prikaži na mapi</button></div>`).join('');
@@ -599,7 +666,8 @@ function buildSources(){
   <h3 style="font-size:20px;margin-top:16px">Zvanični izvori po polju</h3>
   <ul>${Object.entries(S).map(([src,f])=>`<li>${esc(src)} <span class="muted">(${f.map(esc).join(', ')})</span></li>`).join('')}</ul>
   <h3 style="font-size:20px;margin-top:16px">Prostorni i otvoreni izvori</h3>
-  <ul><li>Granice 25 opština: Kontur Boundaries ME 2023 (OSM, CC BY 4.0)</li><li>Naseljenost: Kontur Population ME 2023, H3 mreža (CC BY 4.0)</li><li>Reljef: Terrarium visinske pločice (AWS Open Data, Mapzen)</li><li>Pokrivač tla: ESA WorldCover 2021 v200, 10 m (CC BY 4.0)</li><li>Rijeke: © OpenStreetMap saradnici (ODbL)</li><li>Skadarsko jezero: Natural Earth (javno dobro)</li><li>Bogomolje, smještaj, baština: © OpenStreetMap saradnici (ODbL), novembar 2026</li><li>Elektrane i čuda: Wikidata (CC0)</li></ul>
+  <p><b>Sveta mjesta</b> su vjerski i memorijalni objekti iz Wikidata sa koordinatama u Crnoj Gori (${V.holy.length}), rangirani po broju jezičkih verzija na Wikipediji. Zlatne značke su sveta čuda: Manastir Ostrog, Cetinjski manastir, Njegošev mauzolej na Lovćenu (na mjestu Njegoševe kapele iz 1845, srušene 1972) i najpoznatiji hram svake vjere. Sve vjere imaju istu boju znački.</p>
+  <ul><li>Granice 25 opština: Kontur Boundaries ME 2023 (OSM, CC BY 4.0)</li><li>Naseljenost: Kontur Population ME 2023, H3 mreža (CC BY 4.0)</li><li>Reljef: Terrarium visinske pločice (AWS Open Data, Mapzen)</li><li>Pokrivač tla: ESA WorldCover 2021 v200, 10 m (CC BY 4.0)</li><li>Rijeke: © OpenStreetMap saradnici (ODbL)</li><li>Skadarsko jezero: Natural Earth (javno dobro)</li><li>Bogomolje, smještaj, baština: © OpenStreetMap saradnici (ODbL), novembar 2026</li><li>Elektrane, čuda i sveta mjesta: Wikidata (CC0)</li></ul>
   <p class="muted">Po uzoru na Karpathyjev USA Civ (karpathy.ai/usaciv). Napravio Schule d.o.o., Podgorica · <a href="https://schule.co.me">schule.co.me</a> · office@schule.co.me. Podaci zaključno sa 26.11.2026.</p>`;
 }
 

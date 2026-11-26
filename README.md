@@ -11,18 +11,22 @@ Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim p
 | Teren izbliza: Boka, Lovćen, Cetinje | Pogled grada |
 |---|---|
 | ![Teren izbliza: šume, planine, rijeke i gradovi](docs/detalj.png) | ![Pogled grada Podgorica](docs/pogled-grada.png) |
-| **Najbrojnija nacija (Popis 2023)** | **Istraživač** |
-| ![Najbrojnija nacija po opštinama](docs/nacije.png) | ![Istraživač: dijagram rasipanja i tabela opština](docs/istrazivac.png) |
+| **Sveta mjesta i Savjetnik za vjeru** | **Istraživač** |
+| ![Sveta mjesta: Cetinje, Lovćen, Boka](docs/sveta-mjesta.png) | ![Istraživač](docs/istrazivac.png) |
+| **Najbrojnija nacija (Popis 2023)** | |
+| ![Najbrojnija nacija po opštinama](docs/nacije.png) | |
 
 Kratki video (13 s, originalna muzika): [docs/cg-civ-kratki.mp4](docs/cg-civ-kratki.mp4) · trejler (25 s): [docs/cg-civ-trailer.mp4](docs/cg-civ-trailer.mp4)
 
-Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me
+Po uzoru na Karpathyjev [USA Civ](https://karpathy.ai/usaciv/) i [France Civ](https://mathieuastruc.com/franceciv/). Napravio [Schule](https://schule.co.me), Podgorica · [schule.co.me](https://schule.co.me) · office@schule.co.me
 
 ## Šta ima
 
 - **Mapa:** teren iz satelitskog pokrivača tla (ESA WorldCover 2021: šume, livade, makija, polja, naselja) i reljefa (brda, planine, snijeg, sjenčenje), rijeke iz OSM-a, Jadran i susjedne zemlje u magli, gradski barjaci sa distriktima, 20 čuda, elektrane, pregledna mapa i brza sočiva.
 - **46 sočiva:** 10 prinosa po heksu (zlato, proizvodnja, nauka, kultura, vjera, hrana, stanovnici, noćenja, reljef, teren), 4 sočiva bogatstva (indeks bogatstva, masa zarada po stanovniku, plata januar-septembar 2026, rast plate), 14 pokazatelja po opštini i 18 sočiva iz Popisa 2023 (najbrojnija nacija, najčešći jezik, udjeli nacija, jezika i vjera).
-- **Pogled grada** za 25 opština: prinosi, distrikti po objavljenim pravilima, građani, popisi 1991-2011-2023, rang među opštinama.
+- **Sveta mjesta:** 83 vjerska i memorijalna objekta iz Wikidata. Zlatne značke su sveta čuda: Manastir Ostrog, Cetinjski manastir, Njegošev mauzolej na Lovćenu (na mjestu Njegoševe kapele) i najpoznatiji hram svake vjere: Kotorska katedrala, Saborna crkva u Podgorici, Husein-pašina džamija, Manastir Morača. Savjetnik za vjeru i baštinu.
+- **Pretraga** opština, čuda i svetih mjesta.
+- **Pogled grada** kao bočna ploča: mapa se zumira na opštinu, medalje ranga (stanovnici, zlato, plata, bogatstvo), sveta mjesta i stanovnici po heksu. Za 25 opština: prinosi, distrikti po objavljenim pravilima, građani, popisi 1991-2011-2023, rang među opštinama.
 - **11 savjetnika:** nalazi izračunati iz podataka, uz dugme koje pali odgovarajuće sočivo.
 - **Istraživač:** bilo koja dva pokazatelja kao dijagram rasipanja sa korelacijom, plus tabela svih opština povezana sa mapom.
 
@@ -56,7 +60,7 @@ Brojke opština raspoređene su po heksovima prema naseljenosti (Kontur). Noćen
 - © OpenStreetMap saradnici (ODbL): rijeke
 - Natural Earth (javno dobro)
 - © OpenStreetMap saradnici (ODbL): bogomolje, smještaj, baština
-- Wikidata (CC0): elektrane i čuda
+- Wikidata (CC0): elektrane, čuda i sveta mjesta
 
 Kontrola zbirova: stanovnici 623.633, zaposleni 257.390, nezaposleni 26.833, firme 63.823, studenti 16.005, sa fakultetom 133.931. Sve je jednako zvaničnim ukupnim brojevima.
 
@@ -72,6 +76,7 @@ Ponovna izgradnja podataka (izvorni fajlovi idu u `raw/`, koji nije u repou):
 ```bash
 pip install geopandas shapely pyogrio pdfplumber pillow pyproj
 python3 scripts/fetch_wikidata.py     # Wikidata tačke
+python3 scripts/fetch_holy.py         # sveta mjesta (Wikidata)
 python3 scripts/extract_stats.py      # MONSTAT / ZZZCG PDF -> build/muni_stats.json
 python3 scripts/extract_popis2.py     # Popis 2023: nacija, jezik, vjera -> build/popis2.json
 python3 scripts/extract_2026.py       # turizam 2025/2026, nezaposleni 6/2026, priraštaj 2025

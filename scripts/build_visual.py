@@ -1,7 +1,7 @@
 """Visual layers for the CG Civ map: land cover per hex (ESA WorldCover 2021),
 a ring of context hexes (Adriatic and neighbouring countries) and rivers (OSM).
 Output: build/cgviz.json, coordinates in the site's hex units (R = 1)."""
-import json, math, os, glob
+import json, math, os, glob, re
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point, LineString
@@ -158,7 +158,42 @@ for _, row in mb.iterrows():
                 if d > bd: best, bd = (xx, yy), d
     labels.append(dict(n=nm, p=unit(*best), a=round(g.area / 1e6)))
 
-json.dump(dict(lc=lc, ctx=ctx, rivers=rivers, labels=labels,
+# ---------- sveta mjesta (Wikidata, rang po broju Wikipedia jezika) ----------
+REN = {"Pasha's Mosque": 'Pašina džamija (Ulcinj)', "Seaman's Mosque": 'Pomorska džamija (Ulcinj)', 'Bregu Mosque': 'Džamija na Bregu (Ulcinj)',
+       'Kryepazari Mosque': 'Džamija Kriepazari (Ulcinj)', 'Lami Mosque': 'Lamina džamija (Ulcinj)', 'Namazgjahu Mosque': 'Namazdžah (Ulcinj)',
+       'Church-Mosque of Ulcinj': 'Crkva-džamija (Ulcinj)', 'Church of the Holy Heart of Jesus': 'Crkva Srca Isusova (Podgorica)',
+       'Holy Trinity monastery ( Pljevlja )': 'Manastir Sveta Trojica (Pljevlja)', 'Church of Our Lady of Remedy': 'Crkva Gospe od Zdravlja (Kotor)',
+       'Church of Saint Luke in Kotor': 'Crkva Svetog Luke (Kotor)', 'Serbian Orthodox church of St Nicolas in Kotor': 'Crkva Svetog Nikole (Kotor)',
+       'Saint Anne (Kotor)': 'Crkva Svete Ane (Kotor)', 'Katedrala Bezgrešnog začeća Blažene Djevice Marije na Gretvi, Stari Bar': 'Katedrala na Gretvi (Bar)',
+       'Njegošev mauzolej': 'Njegošev mauzolej na Lovćenu', 'Dovolja Monastery': 'Manastir Dovolja', 'Church of the Holy Savior': 'Crkva Svetog Spasa',
+       'Đurđevića Tara Monastery': 'Manastir Đurđevića Tara', 'Podmalinsko Monastery': 'Manastir Podmalinsko', 'Majstorovina Monastery': 'Manastir Majstorovina',
+       'Church of St. Ivan': 'Crkva Svetog Ivana', 'Saint Michael the Archangel church in Herceg Novi': 'Crkva Svetog Arhanđela Mihaila (Herceg Novi)',
+       'Saints Peter and Paul Orthodox church in Risan': 'Crkva Svetih Petra i Pavla (Risan)', 'Church of St. Jerome in Herceg Novi': 'Crkva Svetog Jeronima (Herceg Novi)',
+       'Church of Saints Peter and Paul, Bijelo Polje': 'Crkva Svetih Petra i Pavla (Bijelo Polje)', 'St. John the Baptist Church in Zaton': 'Crkva Svetog Jovana Krstitelja (Zaton)',
+       'St. Mary Church': 'Crkva Svete Marije', 'Royal Tomb in Cetinje': 'Kraljevska grobnica (Cetinje)', 'St. Michael church in Kotor': 'Crkva Svetog Mihaila (Kotor)',
+       'St Elijah Church': 'Crkva Svetog Ilije'}
+NOTE = {'Q13424615': 'Na Jezerskom vrhu, na mjestu kapele koju je Njegoš podigao 1845; kapela je srušena 1972, mauzolej otvoren 1974.',
+        'Q1257434': 'Manastir u stijeni iz 17. vijeka, jedno od najposjećenijih hodočasničkih mjesta na Balkanu.', 'Q770580': 'Osnovan 1484; čuva mošti Svetog Petra Cetinjskog.'}
+def kind(r):
+    t, rl = r['types'].lower(), r['rel'].lower()
+    if 'mausoleum' in t: return 'memorial'
+    if 'mosque' in t and 'catholic' not in t: return 'islam'
+    if 'islam' in rl: return 'islam'
+    if 'catholic' in rl or 'catholic' in t or 'abbey' in t or r['id'] in ('Q5117907', 'Q4981066', 'Q12758206', 'Q65133683', 'Q136236545'): return 'catholic'
+    return 'orthodox'
+HOLY_STAR = {'Q1257434', 'Q770580', 'Q13424615', 'Q966429', 'Q1639036', 'Q658743', 'Q1395885'}
+holy, seen = [], set()
+for r in json.load(open(os.path.join(RAW, 'wd_holy.json'))):
+    if r['id'] in seen: continue
+    seen.add(r['id'])
+    x, y = to_utm.transform(r['lon'], r['lat']); p = Point(x, y)
+    mu = next((nm for nm, g in [(row['name'].replace('Opština ', '').replace('Glavni grad ', '').replace('Prijestolnica ', '').split(' - ')[0].strip(), row.geometry) for _, row in mb.iterrows()] if g.buffer(1500).contains(p)), None)
+    if not mu or re.match(r'^Q\d+$', r['name']): continue
+    holy.append(dict(id=r['id'], n=REN.get(r['name'], r['name']), k=kind(r), sl=r['sitelinks'], m=mu, p=unit(x, y), star=int(r['id'] in HOLY_STAR), note=NOTE.get(r['id'], '')))
+holy.sort(key=lambda h: (-h['star'], -h['sl']))
+print('holy', len(holy), [(h['n'], h['k'], h['sl']) for h in holy[:10]])
+
+json.dump(dict(lc=lc, ctx=ctx, rivers=rivers, labels=labels, holy=holy,
                src='Pokrivač tla: ESA WorldCover 2021 (10 m), uzorak 61 tačka po heksu. Rijeke: OpenStreetMap. Okolne zemlje i more: reljef Terrarium.'),
           open(os.path.join(BUILD, 'cgviz.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 print('wrote', os.path.getsize(os.path.join(BUILD, 'cgviz.json')))
