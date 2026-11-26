@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="sr-Latn-ME">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CG Civ - Crna Gora na heksovima</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Carlito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: strateška igra koja govori kao statistički godišnjak - mirno, tačno, sa izvorom ispod svake brojke.
+   IDEA: atlas-ploča iz Civilizacije: more i heksovi, gradski barjaci, savjetnici.
+   PICTURE: cijela Crna Gora na 1.850 heksova od ~8 km2, obojena izabranim sočivom.
+   COLOUR and TYPE: duboko more #0b2233, bordo Schule #630D3D, zlato #d9a441 za akcenat; Caladea naslovi, Carlito tekst.
+   LAYOUT: mapa lijevo preko cijele visine, ploča sa karticama desno; ispod 900px ploča ide ispod mape. */
+:root{color-scheme:light dark;--sea:#0b2233;--bg:light-dark(#f4f1ea,#0e1a24);--panel:light-dark(#fffdf8,#142430);--ink:light-dark(#1c1a17,#e9e4d8);
+--mute:light-dark(#6b645a,#9fa9b0);--line:light-dark(#ddd5c6,#26394a);--bordo:#630D3D;--bordo2:light-dark(#630D3D,#c2577f);--gold:#d9a441}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Carlito,Calibri,'Segoe UI',sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Caladea,Cambria,Georgia,serif;margin:0;line-height:1.1;text-wrap:balance}
+button,select{font:inherit;color:inherit}
+header{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:10px 16px;background:var(--bordo);color:#fff}
+header h1{font-size:26px}header .sub{font-size:14px;opacity:.85}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-inline-start:auto}
+.pill{background:rgba(255,255,255,.12);border-radius:999px;padding:3px 10px;font-size:14px;white-space:nowrap}
+.pill b{font-variant-numeric:tabular-nums}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:calc(100vh - 56px);min-height:520px}
+#mapwrap{position:relative;background:var(--sea);overflow:hidden;touch-action:none}
+#map{position:absolute;inset:0;width:100%;height:100%;cursor:grab}
+#legend{position:absolute;left:12px;bottom:12px;background:rgba(11,34,51,.88);color:#e9e4d8;border-radius:10px;padding:10px 12px;font-size:13px;max-width:min(320px,70%)}
+#legend .bar{height:10px;border-radius:5px;margin:6px 0 2px}
+#legend .ends{display:flex;justify-content:space-between;gap:10px}
+#tip{position:absolute;pointer-events:none;background:#fffdf8;color:#1c1a17;border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.35);display:none;max-width:260px;z-index:3}
+#tip b{font-family:Caladea,serif;font-size:15px}
+.zoom{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:44px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#630D3D;color:#fff;font-size:20px;cursor:pointer}
+aside{background:var(--panel);border-inline-start:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{flex:1;min-height:44px;border:0;background:none;padding:8px 10px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-selected=true]{border-bottom-color:var(--bordo2);font-weight:700}
+.tabs button:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.pane{padding:14px 16px;overflow-y:auto;flex:1}
+.pane[hidden]{display:none}
+.lgrp{font-size:13px;color:var(--mute);margin:14px 0 6px}
+.lens{display:block;width:100%;text-align:start;border:1px solid var(--line);background:none;border-radius:8px;padding:8px 10px;margin:4px 0;cursor:pointer;min-height:40px}
+.lens[aria-pressed=true]{border-color:var(--bordo2);background:light-dark(#f6e9ef,#2a1a24)}
+.lens small{display:block;color:var(--mute);font-size:13px}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;margin:0 0 12px}
+.card h3{font-size:19px;margin-bottom:4px}
+.card .find{margin:4px 0 8px}
+.card ol{margin:0;padding-inline-start:20px;font-size:15px}
+.card .go{border:0;background:var(--bordo);color:#fff;border-radius:8px;padding:6px 12px;min-height:36px;cursor:pointer;margin-top:8px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.muted{color:var(--mute);font-size:13px}
+label.sel{display:block;font-size:13px;color:var(--mute);margin:6px 0 2px}
+select{width:100%;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:6px 8px;font-size:16px}
+.fig{position:relative;height:300px;margin:10px 0}
+.fig svg{position:absolute;inset:0;width:100%;height:100%}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;width:100%}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:end;white-space:nowrap}
+th:first-child,td:first-child{text-align:start;position:sticky;left:0;background:var(--panel)}
+th{cursor:pointer;font-weight:700;font-size:13px;vertical-align:bottom}
+tr.hl td{background:light-dark(#f6e9ef,#2a1a24)}
+tbody tr{cursor:pointer}
+#city{position:fixed;inset:0;background:rgba(5,15,22,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#city.open{display:flex}
+#city .box{background:var(--panel);color:var(--ink);border-radius:14px;max-width:820px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#city .top{background:var(--bordo);color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+#city .top h2{font-size:36px}
+#city .x{margin-inline-start:auto;width:44px;height:44px;border-radius:10px;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:22px;cursor:pointer}
+#city .body{padding:16px 20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.yields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.y{border-radius:10px;padding:8px;color:#fff}
+.y b{display:block;font-size:22px;font-variant-numeric:tabular-nums}.y span{font-size:13px}
+.dist{display:flex;flex-wrap:wrap;gap:6px}
+.dist span{border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:14px}
+.dist span i{display:block;font-style:normal;color:var(--mute);font-size:13px}
+.kv td{text-align:end}.kv td:first-child{text-align:start;white-space:normal}
+.popbars{display:flex;gap:8px;align-items:flex-end;height:80px}
+.popbars div{flex:1;background:var(--bordo2);border-radius:4px 4px 0 0;position:relative}
+.popbars div span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:12px}
+.popbars+div{display:flex;gap:8px}.popbars+div span{flex:1;text-align:center;font-size:12px;color:var(--mute)}
+@media(max-width:900px){main{grid-template-columns:minmax(0,1fr);height:auto}#mapwrap{height:68vh}aside{border-inline-start:0}.pills{margin-inline-start:0}}
+@media(max-width:600px){#city .body{grid-template-columns:minmax(0,1fr)}header h1{font-size:22px}#city .top h2{font-size:28px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>CG Civ</h1><div class="sub">Crna Gora na heksovima: 25 opština, stvarni podaci, jezik Civilizacije</div></div>
+  <div class="pills" id="pills"></div>
+</header>
+<main>
+  <div id="mapwrap">
+    <canvas id="map" aria-label="Heks mapa Crne Gore"></canvas>
+    <div class="zoom"><button id="zin" aria-label="Uvećaj">+</button><button id="zout" aria-label="Umanji">-</button><button id="zfit" aria-label="Cijela mapa">◎</button></div>
+    <div id="legend"></div><div id="tip"></div>
+  </div>
+  <aside>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-t="lenses" aria-selected="true">Sočiva</button>
+      <button role="tab" data-t="advisors" aria-selected="false">Savjetnici</button>
+      <button role="tab" data-t="explorer" aria-selected="false">Istraživač</button>
+      <button role="tab" data-t="sources" aria-selected="false">Izvori</button>
+    </div>
+    <div class="pane" id="p-lenses"><p class="muted">Klik na grad otvara pogled grada. Klik na heks pokazuje njegove brojke. Prevuci i zumiraj.</p><div id="lensList"></div><div id="hexInfo"></div></div>
+    <div class="pane" id="p-advisors" hidden></div>
+    <div class="pane" id="p-explorer" hidden>
+      <label class="sel" for="ex">Osa X</label><select id="ex"></select>
+      <label class="sel" for="ey">Osa Y</label><select id="ey"></select>
+      <div class="fig"><svg id="scatter" role="img" aria-label="Dijagram rasipanja opština"></svg></div>
+      <p class="muted" id="corr"></p>
+      <div class="scroll"><table id="extab"></table></div>
+    </div>
+    <div class="pane" id="p-sources" hidden></div>
+  </aside>
+</main>
+<div id="city" role="dialog" aria-modal="true" aria-labelledby="cityName"><div class="box" id="cityBox"></div></div>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(v,d=0)=>v==null||isNaN(v)?'-':Number(v).toLocaleString('sr-Latn-ME',{maximumFractionDigits:d,minimumFractionDigits:0});
+const SQ3=Math.sqrt(3);
+const TERR={plains:['#c8bf78','Ravnica'],grassland:['#93b35e','Livade i polja'],hills:['#6e8c4b','Brda'],mountain:['#8b8272','Planine'],peak:['#ece9e2','Vrhovi iznad 2.100 m'],lake:['#3d7ea8','Jezero'],sea:['#1c4f74','More']};
+const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture:'#8a4bb0',faith:'#e0d7c3'};
+let touched=false,D,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
+const cv=$('#map'),cx=cv.getContext('2d');
+
+fetch('cgciv.json').then(r=>r.json()).then(d=>{D=d;init()}).catch(e=>{$('#legend').textContent='Podaci nijesu učitani: '+e.message});
+
+function init(){
+  hexes=D.hexes;nat=D.meta.nat;
+  for(const h of hexes){h.px=SQ3*(h.q+h.r/2);h.py=-1.5*h.r;byKey[h.q+','+h.r]=h}
+  for(const c of D.cities)cityByKey[c.q+','+c.r]=c;
+  for(const r of D.table)T[r['Opština']]=r;
+  $('#pills').innerHTML=[['Stanovnici',fmt(nat.pop2023)],['Zlato',fmt(nat.wagebill_meur)+' mil. €'],['Firme',fmt(nat.firms2025)],['Noćenja',fmt(nat.nights2024/1e6,1)+' mil.'],['Heksova',fmt(hexes.length)]]
+    .map(([a,b])=>`<span class="pill">${a} <b>${b}</b></span>`).join('');
+  buildLenses();buildAdvisors();buildExplorer();buildSources();resize();fit();
+}
+
+/* ---------- lenses ---------- */
+const HL={
+  terrain:{g:'Mapa',l:'Teren',d:'Izveden iz reljefa (prosjek i raspon visina u heksu). Nije sloj pokrivača tla.'},
+  elev:{g:'Mapa',l:'Reljef',d:'Prosječna nadmorska visina heksa, m',v:h=>h.terrain==='sea'?null:h.emean,ramp:['#2f6b3a','#d8c48a','#8b5a3c','#f2f0ea']},
+  pop:{g:'Prinosi heksa',l:'Stanovnici',d:'Popis 2023 raspoređen po Kontur mreži naseljenosti',v:h=>h.pop,log:1},
+  gold:{g:'Prinosi heksa',l:'Zlato',d:'1 zlato = 1 mil. € godišnje mase neto zarada (zaposleni x plata x 12), raspoređeno po stanovnicima',v:h=>h.gold,log:1,ramp:['#3a2f12','#c9952c','#ffe7a3']},
+  prod:{g:'Prinosi heksa',l:'Proizvodnja',d:'Teren + aktivne firme 2025 (1 po 60) + elektrane (1 po 20 MW)',v:h=>h.prod,ramp:['#2a1a10','#c8692a','#ffd2a8']},
+  science:{g:'Prinosi heksa',l:'Nauka',d:'Stanovnici sa fakultetom (Popis 2023), 1 po 300',v:h=>h.science,log:1,ramp:['#0f2238','#3f7fc9','#cfe4ff']},
+  culture:{g:'Prinosi heksa',l:'Kultura i turizam',d:'Objekti baštine u OSM + noćenja 2024 (1 po 25.000)',v:h=>h.culture,log:1,ramp:['#1f1029','#8a4bb0','#ecd3ff']},
+  faith:{g:'Prinosi heksa',l:'Vjera',d:'Broj bogomolja u OpenStreetMap, bez podjele po vjeri',v:h=>h.faith,log:1,ramp:['#2a2620','#bfb39a','#fffaf0']},
+  food:{g:'Prinosi heksa',l:'Hrana',d:'Po terenu, +1 uz more i uz jezero (pravilo igre, ne podatak o proizvodnji)',v:h=>h.food,ramp:['#1f2a14','#4f9a3c','#d6f5b8']},
+  nights:{g:'Prinosi heksa',l:'Noćenja',d:'Noćenja 2024 opštine raspoređena po smještajnim objektima iz OSM',v:h=>h.nights,log:1,ramp:['#10202c','#2e9aa8','#c9fbff']},
+};
+const MUNI_LENS=['Neto plata 2025 €','Nezaposlenost % (reg.)','Firme na 1.000 st.','Rast firmi 2024-25 %','Fakultet % (15+)','Programiranje %','Noćenja po stanovniku','Sezonski stanovi %','Promjena 1991-2023 %','Prirodni priraštaj ‰','65+ %','Ljekari na 10.000 st.','MOP korisnici na 1.000 st.','Gustina st/km2'];
+const DIVERGE=new Set(['Promjena 1991-2023 %','Prirodni priraštaj ‰','Rast firmi 2024-25 %']);
+function buildLenses(){
+  let g='',out='';
+  const all=[...Object.entries(HL).map(([k,o])=>[k,o.g,o.l,o.d]),...MUNI_LENS.map(c=>['m:'+c,'Po opštinama',c,'Vrijednost opštine, sve heksove boji isto'])];
+  for(const [k,gr,l,d] of all){if(gr!==g){out+=`<div class="lgrp">${esc(gr)}</div>`;g=gr}out+=`<button class="lens" data-k="${esc(k)}" aria-pressed="${k===lens}">${esc(l)}<small>${esc(d)}</small></button>`}
+  $('#lensList').innerHTML=out;
+  $('#lensList').addEventListener('click',e=>{const b=e.target.closest('.lens');if(b)setLens(b.dataset.k)});
+}
+function setLens(k){lens=k;document.querySelectorAll('.lens').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));draw()}
+function hex2rgb(c){c=c.replace('#','');return[0,2,4].map(i=>parseInt(c.slice(i,i+2),16))}
+function ramp(cols,t){t=Math.max(0,Math.min(1,t));const n=cols.length-1,i=Math.min(n-1,Math.floor(t*n)),f=t*n-i,a=hex2rgb(cols[i]),b=hex2rgb(cols[i+1]);return`rgb(${a.map((v,j)=>Math.round(v+(b[j]-v)*f)).join(',')})`}
+let scaleCache={};
+function lensScale(){
+  if(scaleCache.k===lens)return scaleCache;
+  let vals,get,cols,log=0,div=false;
+  if(lens.startsWith('m:')){const c=lens.slice(2);get=h=>h.muni?T[h.muni][c]:null;vals=D.table.map(r=>r[c]).filter(v=>v!=null);div=DIVERGE.has(c);cols=div?['#2f6ea6','#f2efe8','#a3243f']:['#f3ead2','#c9786f','#630D3D','#2a0418']}
+  else{const o=HL[lens];get=o.v;log=o.log;cols=o.ramp||['#16303f','#9c4a6c','#f7d9e4'];vals=hexes.map(get).filter(v=>v!=null)}
+  const tr=v=>log?Math.log10(1+v):v;let lo=Math.min(...vals.map(tr)),hi=Math.max(...vals.map(tr));
+  if(div){const m=Math.max(Math.abs(lo),Math.abs(hi));lo=-m;hi=m}
+  return scaleCache={k:lens,get,cols,lo,hi,tr,log,raw:[Math.min(...vals),Math.max(...vals)]};
+}
+function colorOf(h){
+  if(lens==='terrain'||h.terrain==='sea'||h.terrain==='lake'&&lens!=='elev'){
+    const base=TERR[h.terrain][0];if(h.terrain==='sea'||h.terrain==='lake')return base;
+    const [r,g,b]=hex2rgb(base),k=1-Math.min(.25,(h.emean||0)/9000);return`rgb(${r*k|0},${g*k|0},${b*k|0})`}
+  const S=lensScale(),v=S.get(h);if(v==null)return'#3a3f44';
+  return ramp(S.cols,(S.tr(v)-S.lo)/((S.hi-S.lo)||1));
+}
+function legend(){
+  if(lens==='terrain'){$('#legend').innerHTML='<b>Teren</b><br>'+Object.values(TERR).map(([c,l])=>`<span style="display:inline-block;width:10px;height:10px;background:${c};border-radius:2px"></span> ${l}`).join('<br>')+'<br><span class="muted" style="color:#9fb1bd">Gradovi, zvijezde = čuda, munje = elektrane</span>';return}
+  const S=lensScale(),name=lens.startsWith('m:')?lens.slice(2):HL[lens].l;
+  const g=`linear-gradient(90deg,${[0,.25,.5,.75,1].map(t=>ramp(S.cols,t)).join(',')})`;
+  const lo=lens.startsWith('m:')&&DIVERGE.has(lens.slice(2))?S.lo:S.raw[0],hi=lens.startsWith('m:')&&DIVERGE.has(lens.slice(2))?S.hi:S.raw[1];
+  $('#legend').innerHTML=`<b>${esc(name)}</b>${S.log?' <span style="color:#9fb1bd">(log skala)</span>':''}<div class="bar" style="background:${g}"></div><div class="ends"><span class="num">${fmt(lo,1)}</span><span class="num">${fmt(hi,1)}</span></div>`;
+}
+
+/* ---------- map drawing ---------- */
+function resize(){const r=cv.getBoundingClientRect();dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;if(!touched&&hexes)fit();else draw()}
+function fit(){
+  const r=cv.getBoundingClientRect();let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const h of hexes){x0=Math.min(x0,h.px);x1=Math.max(x1,h.px);y0=Math.min(y0,h.py);y1=Math.max(y1,h.py)}
+  s=Math.min(r.width/(x1-x0+3),r.height/(y1-y0+3));tx=r.width/2-s*(x0+x1)/2;ty=r.height/2-s*(y0+y1)/2;draw();
+}
+const VX=[0,1,2,3,4,5].map(i=>{const a=Math.PI/180*(60*i-90);return[Math.cos(a),Math.sin(a)]});
+const NB=[[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+function draw(){
+  if(!hexes)return;const W=cv.width/dpr,H=cv.height/dpr;
+  cx.setTransform(dpr,0,0,dpr,0,0);cx.fillStyle='#0b2233';cx.fillRect(0,0,W,H);
+  const R=s*1.0;
+  for(const h of hexes){
+    const x=h.px*s+tx,y=h.py*s+ty;if(x<-R||y<-R||x>W+R||y>H+R)continue;
+    cx.beginPath();VX.forEach(([a,b],i)=>i?cx.lineTo(x+a*R*1.01,y+b*R*1.01):cx.moveTo(x+a*R*1.01,y+b*R*1.01));cx.closePath();
+    cx.fillStyle=colorOf(h);cx.fill();
+  }
+  // municipal and coast borders
+  cx.lineCap='round';
+  for(const h of hexes){
+    if(!h.muni)continue;const x=h.px*s+tx,y=h.py*s+ty;if(x<-R||y<-R||x>W+R||y>H+R)continue;
+    for(const [a,b] of NB){const n=byKey[(h.q+a)+','+(h.r+b)];if(n&&n.muni===h.muni)continue;
+      const nx=SQ3*(h.q+a+(h.r+b)/2)*s+tx,ny=-1.5*(h.r+b)*s+ty,mx=(x+nx)/2,my=(y+ny)/2,dx=nx-x,dy=ny-y,L=Math.hypot(dx,dy),px=-dy/L*R/2,py=dx/L*R/2;
+      const outer=!n||!n.muni;cx.strokeStyle=outer?'rgba(255,255,255,.75)':'rgba(20,20,20,.55)';cx.lineWidth=outer?Math.max(1.2,s*.14):Math.max(.8,s*.09);
+      if(sel&&h.muni===sel&&(!n||n.muni!==sel)){cx.strokeStyle='#ffd166';cx.lineWidth=Math.max(2.5,s*.3)}
+      cx.beginPath();cx.moveTo(mx+px,my+py);cx.lineTo(mx-px,my-py);cx.stroke()}
+  }
+  // yield pips when zoomed in
+  if(s>16&&(lens==='terrain'))for(const h of hexes){if(!h.muni)continue;const x=h.px*s+tx,y=h.py*s+ty;if(x<0||y<0||x>W||y>H)continue;
+    const p=[['food',h.food],['prod',Math.min(4,h.prod)],['gold',Math.min(4,Math.round(Math.log2(1+h.gold)))]];let k=0;
+    for(const [t,n] of p)for(let i=0;i<n;i++){cx.fillStyle=YC[t];cx.beginPath();cx.arc(x-s*.45+(k%5)*s*.22,y+s*.28+Math.floor(k/5)*s*.22,s*.08,0,7);cx.fill();k++}}
+  // power plants
+  for(const p of D.power){const x=SQ3*(p.q+p.r/2)*s+tx,y=-1.5*p.r*s+ty,z=Math.max(5,s*.45);cx.fillStyle='#ffd84a';cx.strokeStyle='#3a2a00';cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(x+z*.1,y-z);cx.lineTo(x-z*.5,y+z*.1);cx.lineTo(x,y+z*.1);cx.lineTo(x-z*.15,y+z);cx.lineTo(x+z*.5,y-z*.1);cx.lineTo(x,y-z*.1);cx.closePath();cx.fill();cx.stroke()}
+  // wonders
+  for(const w of D.wonders){const x=SQ3*(w.q+w.r/2)*s+tx,y=-1.5*w.r*s+ty,z=Math.max(5,s*.5);star(x,y,z);
+    if(s>9){cx.font=`${Math.max(11,Math.min(14,s*.6))}px Carlito,sans-serif`;cx.fillStyle='#fff3c4';cx.strokeStyle='rgba(0,0,0,.7)';cx.lineWidth=3;cx.textAlign='center';cx.strokeText(w.name,x,y+z+12);cx.fillText(w.name,x,y+z+12)}}
+  // city banners
+  const cities=[...D.cities].sort((a,b)=>a.pop-b.pop);
+  for(const c of cities){const x=SQ3*(c.q+c.r/2)*s+tx,y=-1.5*c.r*s+ty;const big=c.pop>20000||s>7;
+    cx.fillStyle='#fff';cx.strokeStyle='#630D3D';cx.lineWidth=2;cx.beginPath();cx.arc(x,y,Math.max(3,s*.35),0,7);cx.fill();cx.stroke();
+    if(!big)continue;
+    const fs=Math.max(11,Math.min(16,s*.7));cx.font=`700 ${fs}px Carlito,sans-serif`;const label=c.name,pop=fmt(c.pop/1000,c.pop<10000?1:0)+'k';
+    const w1=cx.measureText(pop).width+10,w2=cx.measureText(label).width+12,bw=w1+w2,bh=fs+8,bx=x-bw/2,by=y-Math.max(3,s*.35)-bh-4;
+    cx.fillStyle='#630D3D';rr(bx,by,bw,bh,5);cx.fill();cx.fillStyle='#d9a441';rr(bx,by,w1,bh,5);cx.fill();
+    cx.fillStyle='#1c1a17';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(pop,bx+w1/2,by+bh/2+1);cx.fillStyle='#fff';cx.fillText(label,bx+w1+w2/2,by+bh/2+1);cx.textBaseline='alphabetic'}
+  legend();
+}
+function rr(x,y,w,h,r){cx.beginPath();cx.moveTo(x+r,y);cx.arcTo(x+w,y,x+w,y+h,r);cx.arcTo(x+w,y+h,x,y+h,r);cx.arcTo(x,y+h,x,y,r);cx.arcTo(x,y,x+w,y,r);cx.closePath()}
+function star(x,y,r){cx.beginPath();for(let i=0;i<10;i++){const a=Math.PI/5*i-Math.PI/2,q=i%2?r*.45:r;cx.lineTo(x+Math.cos(a)*q,y+Math.sin(a)*q)}cx.closePath();cx.fillStyle='#ffd166';cx.strokeStyle='#5a3a00';cx.lineWidth=1;cx.fill();cx.stroke()}
+
+/* ---------- interaction ---------- */
+function pick(sx,sy){const px=(sx-tx)/s,py=(sy-ty)/s;let r=-py/1.5,q=px/SQ3-r/2,z=-q-r;let rq=Math.round(q),rr2=Math.round(r),rz=Math.round(z);
+  const dq=Math.abs(rq-q),dr=Math.abs(rr2-r),dz=Math.abs(rz-z);if(dq>dr&&dq>dz)rq=-rr2-rz;else if(dr>dz)rr2=-rq-rz;return byKey[rq+','+rr2]}
+const ptrs=new Map();let drag=null,moved=0,pinch=null;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.offsetX,e.offsetY]);moved=0;
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1]),s}}else drag=[e.offsetX,e.offsetY,tx,ty];cv.style.cursor='grabbing'});
+cv.addEventListener('pointermove',e=>{
+  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,[e.offsetX,e.offsetY]);
+  if(pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);zoomAt((a[0]+b[0])/2,(a[1]+b[1])/2,pinch.s*d/pinch.d/s);moved=9;return}
+  if(drag&&ptrs.size===1){touched=true;tx=drag[2]+e.offsetX-drag[0];ty=drag[3]+e.offsetY-drag[1];moved+=Math.abs(e.movementX)+Math.abs(e.movementY);draw();$('#tip').style.display='none';return}
+  tip(e.offsetX,e.offsetY)});
+cv.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;cv.style.cursor='grab';
+  if(drag&&moved<6){const h=pick(e.offsetX,e.offsetY);if(h){const c=cityByKey[h.q+','+h.r];if(c)openCity(c.name);else hexInfo(h)}}drag=null});
+cv.addEventListener('pointerleave',()=>$('#tip').style.display='none');
+cv.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*.0015))},{passive:false});
+function zoomAt(x,y,f){touched=true;const ns=Math.max(3,Math.min(80,s*f));f=ns/s;tx=x-(x-tx)*f;ty=y-(y-ty)*f;s=ns;draw()}
+$('#zin').onclick=()=>{const r=cv.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.4)};
+$('#zout').onclick=()=>{const r=cv.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1/1.4)};
+$('#zfit').onclick=fit;
+new ResizeObserver(resize).observe(cv);
+const TN=h=>TERR[h.terrain][1];
+function hexLines(h){
+  if(!h.muni)return`<b>${TN(h)}</b>`;
+  return`<b>${esc(h.muni)}</b> · ${TN(h)}${h.coast?', uz more':''}<br>Visina oko <span class="num">${fmt(h.emean)} m</span> (vrh ${fmt(h.emax)} m)<br>
+  Stanovnici <b class="num">${fmt(h.pop)}</b><br>Hrana ${h.food} · Proizvodnja ${h.prod} · Zlato ${fmt(h.gold,1)}<br>Nauka ${h.science} · Kultura ${h.culture} · Vjera ${h.faith}`+
+  (h.mw?`<br>Elektrana ${fmt(h.mw)} MW`:'')+(h.lodging?`<br>Smještajnih objekata ${h.lodging}`:'');
+}
+function tip(x,y){const h=pick(x,y),t=$('#tip');if(!h){t.style.display='none';return}const c=cityByKey[h.q+','+h.r];
+  t.innerHTML=(c?`<b>${esc(c.name)}</b> - grad, klik za pogled grada<br>`:'')+hexLines(h);t.style.display='block';
+  const W=cv.getBoundingClientRect().width;t.style.left=Math.min(x+14,W-270)+'px';t.style.top=(y+14)+'px'}
+function hexInfo(h){$('#hexInfo').innerHTML=`<div class="card" style="margin-top:12px"><h3>Izabrani heks</h3>${hexLines(h)}<p class="muted">Heks ima oko 8 km². Brojke opštine raspoređene su po heksovima kako piše u Izvorima.</p></div>`;sel=h.muni;draw()}
+
+/* ---------- city view ---------- */
+const rank=(m,c,desc=true)=>{const arr=D.table.filter(r=>r[c]!=null).sort((a,b)=>desc?b[c]-a[c]:a[c]-b[c]);const i=arr.findIndex(r=>r['Opština']===m);return i<0?'':`${i+1}. od ${arr.length}`};
+function openCity(name){
+  const c=D.cities.find(x=>x.name===name),t=T[name],z=c.citizens;sel=name;draw();
+  const ys=[['Hrana',c.food,'food'],['Proizvodnja',c.prod,'prod'],['Zlato (mil. €)',c.gold,'gold'],['Nauka',c.science,'science'],['Kultura',c.culture,'culture'],['Vjera',c.faith,'faith']];
+  const W=D.wonders.filter(w=>w.muni===name);
+  const pops=[['1991',c.pop1991],['2011',c.pop2011],['2023',c.pop]].filter(p=>p[1]);const pm=Math.max(...pops.map(p=>p[1]));
+  const kv=[['Neto plata 2025','Neto plata 2025 €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost (registrovana)','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2024','Noćenja 2024',''],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2024','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
+  $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div></div><button class="x" aria-label="Zatvori">×</button></div>
+  <div class="body"><div>
+   <h3 style="font-size:19px;margin-bottom:8px">Prinosi</h3><div class="yields">${ys.map(([l,v,k])=>`<div class="y" style="background:${YC[k]};${k==='faith'?'color:#1c1a17':''}"><b>${fmt(v,k==='gold'?1:0)}</b><span>${l}</span></div>`).join('')}</div>
+   <h3 style="font-size:19px;margin:16px 0 8px">Distrikti</h3><div class="dist">${c.districts.length?c.districts.map(d=>`<span><b>${esc(d.n)}</b><i>${esc(d.why)}</i></span>`).join(''):'<span class="muted">Nijedno pravilo za distrikt nije ispunjeno.</span>'}</div>
+   <h3 style="font-size:19px;margin:16px 0 8px">Čuda na teritoriji</h3>${W.length?W.map(w=>`<div>★ ${esc(w.name)} <span class="muted">${w.sitelinks} Wikipedia jezika</span></div>`).join(''):'<div class="muted">Nema među 20 najdokumentovanijih objekata.</div>'}
+  </div><div>
+   <h3 style="font-size:19px;margin-bottom:8px">Građani</h3>
+   <p style="margin:0 0 6px">Fakultet ima <b>1 od ${fmt(z.one_in,1)}</b> stanovnika 15+ (${fmt(z.higher_share,1)}%), u CG 1 od ${fmt(z.nat_one_in,1)}. Programira <b>${fmt(z.prog,1)}%</b> (CG ${fmt(nat.prog_pct,1)}%).</p>
+   <p style="margin:0 0 6px">Mladih do 14 godina ${fmt(z.age0_14,1)}%, starijih od 65 ${fmt(z.age65,1)}%.</p>
+   <h3 style="font-size:19px;margin:14px 0 22px">Stanovništvo po popisima</h3>
+   <div class="popbars">${pops.map(p=>`<div style="height:${p[1]/pm*100}%"><span class="num">${fmt(p[1])}</span></div>`).join('')}</div><div>${pops.map(p=>`<span>${p[0]}</span>`).join('')}</div>
+   <h3 style="font-size:19px;margin:16px 0 6px">Ključne brojke</h3>
+   <table class="kv">${kv.map(([l,k,u])=>`<tr><td>${l}</td><td class="num">${fmt(t[k],1)}${t[k]==null?'':u}</td><td class="muted num">${rank(name,k)}</td></tr>`).join('')}</table>
+  </div></div>`;
+  $('#city').classList.add('open');$('#cityBox .x').onclick=closeCity;$('#cityBox .x').focus();
+}
+function closeCity(){$('#city').classList.remove('open')}
+$('#city').addEventListener('click',e=>{if(e.target.id==='city')closeCity()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCity()});
+
+/* ---------- advisors ---------- */
+function top(c,n=3,desc=true){return D.table.filter(r=>r[c]!=null).sort((a,b)=>desc?b[c]-a[c]:a[c]-b[c]).slice(0,n)}
+const li=(rows,c,u='',d=1)=>'<ol>'+rows.map(r=>`<li>${esc(r['Opština'])} <span class="num">${fmt(r[c],d)}${u}</span></li>`).join('')+'</ol>';
+function buildAdvisors(){
+  const pg=T['Podgorica'],sumW=nat.wagebill_meur,coast=['Bar','Budva','Herceg Novi','Kotor','Tivat','Ulcinj'];
+  const nightsCoast=coast.reduce((a,m)=>a+(T[m]['Noćenja 2024']||0),0);
+  const north=['Andrijevica','Berane','Bijelo Polje','Gusinje','Kolašin','Mojkovac','Petnjica','Plav','Pljevlja','Plužine','Rožaje','Šavnik','Žabljak'];
+  const nU=north.reduce((a,m)=>a+T[m]['Nezaposleni 1/2026'],0),nE=north.reduce((a,m)=>a+T[m]['Zaposleni 2024'],0);
+  const fg=(nat.firms2025-nat.firms2024)/nat.firms2024*100;
+  const sig1=D.table.filter(r=>r['Rast firmi 2024-25 %']>fg&&r['Neto plata 2025 €']<nat.net_wage2025).sort((a,b)=>b['Rast firmi 2024-25 %']-a['Rast firmi 2024-25 %']).slice(0,5);
+  const he=nat.higher_share*100;
+  const sig2=D.table.filter(r=>(r['Noćenja po stanovniku']||0)>=20&&r['Fakultet % (15+)']<he);
+  const A=[
+   ['Ekonomski savjetnik','m:Neto plata 2025 €',`Podgorica nosi ${fmt(pg['Masa zarada mil. €']/sumW*100)}% godišnje mase neto zarada (${fmt(pg['Masa zarada mil. €'])} od ${fmt(sumW)} mil. €), a ima ${fmt(pg['Stanovnici 2023']/nat.pop2023*100)}% stanovnika.`,'Najveća neto plata 2025',li(top('Neto plata 2025 €'),'Neto plata 2025 €',' €',0)],
+   ['Savjetnik za privredu','m:Firme na 1.000 st.',`Aktivnih firmi ima ${fmt(nat.firms2025)}, ${fmt(fg,1)}% više nego 2024. Budva ima ${fmt(T['Budva']['Firme na 1.000 st.'])} firmi na 1.000 stanovnika, CG ${fmt(nat.firms2025/nat.pop2023*1000)}.`,'Najbrži rast broja firmi 2024-25',li(top('Rast firmi 2024-25 %'),'Rast firmi 2024-25 %','%')],
+   ['Naučni savjetnik','m:Fakultet % (15+)',`Fakultet ima ${fmt(he,1)}% stanovnika 15+. Raspon među opštinama je od ${fmt(top('Fakultet % (15+)',1,false)[0]['Fakultet % (15+)'],1)}% do ${fmt(top('Fakultet % (15+)',1)[0]['Fakultet % (15+)'],1)}%.`,'Najveći udio sa fakultetom',li(top('Fakultet % (15+)'),'Fakultet % (15+)','%')],
+   ['Savjetnik za turizam','m:Noćenja po stanovniku',`Šest primorskih opština ostvarilo je ${fmt(nightsCoast/nat.nights2024*100,1)}% od ${fmt(nat.nights2024)} noćenja 2024. Gusinje, Petnjica i Tuzi nemaju objavljene podatke.`,'Najviše noćenja po stanovniku',li(top('Noćenja po stanovniku'),'Noćenja po stanovniku','',0)],
+   ['Savjetnik za prostor','m:Sezonski stanovi %',`Od ${fmt(nat.dwellings)} stanova, ${fmt(nat.dwellings_seasonal)} (${fmt(nat.dwellings_seasonal/nat.dwellings*100,1)}%) služi za sezonsko korišćenje (Popis 2023).`,'Najveći udio sezonskih stanova',li(top('Sezonski stanovi %'),'Sezonski stanovi %','%')],
+   ['Demografski savjetnik','m:Promjena 1991-2023 %',`Od 1991. do 2023. najviše je izgubio ${esc(top('Promjena 1991-2023 %',1,false)[0]['Opština'])} (${fmt(top('Promjena 1991-2023 %',1,false)[0]['Promjena 1991-2023 %'],1)}%), najviše dobila ${esc(top('Promjena 1991-2023 %',1)[0]['Opština'])} (+${fmt(top('Promjena 1991-2023 %',1)[0]['Promjena 1991-2023 %'],1)}%). Opštine nastale poslije 2011. nemaju poređenje.`,'Najveći pad stanovništva od 1991.',li(top('Promjena 1991-2023 %',3,false),'Promjena 1991-2023 %','%')],
+   ['Savjetnik za rad','m:Nezaposlenost % (reg.)',`Trinaest sjevernih opština ima ${fmt(nU/nat.unemployed_jan2026*100)}% registrovanih nezaposlenih, a ${fmt(nE/nat.employed2024*100)}% zaposlenih CG.`,'Najveća registrovana nezaposlenost',li(top('Nezaposlenost % (reg.)'),'Nezaposlenost % (reg.)','%')],
+   ['Socijalni savjetnik','m:MOP korisnici na 1.000 st.',`Materijalno obezbjeđenje porodice (MOP) je najzastupljenije tamo gdje je nezaposlenost najveća. Ljekara na 10.000 stanovnika najviše ima ${esc(top('Ljekari na 10.000 st.',1)[0]['Opština'])}.`,'Najviše korisnika MOP na 1.000',li(top('MOP korisnici na 1.000 st.'),'MOP korisnici na 1.000 st.','')],
+   ['Investicioni signali (Schule)','m:Rast firmi 2024-25 %',`Pravilo 1: broj firmi raste brže od CG (${fmt(fg,1)}%), a plata je ispod CG (${nat.net_wage2025} €). Pravilo 2: turizam iznad 20 noćenja po stanovniku, a fakultet ispod CG: ${sig2.map(r=>esc(r['Opština'])).join(', ')||'nema'}. Ovo su signali iz podataka, ne preporuka.`,'Pravilo 1 ispunjavaju',li(sig1,'Rast firmi 2024-25 %','%')],
+  ];
+  $('#p-advisors').innerHTML=A.map(([t,l,f,h,list])=>`<div class="card"><h3>${t}</h3><p class="find">${f}</p><div class="muted">${h}</div>${list}<button class="go" data-l="${esc(l)}">Prikaži na mapi</button></div>`).join('');
+  $('#p-advisors').addEventListener('click',e=>{const b=e.target.closest('.go');if(b){setLens(b.dataset.l);showTab('lenses')}});
+}
+
+/* ---------- explorer ---------- */
+let sortC='Stanovnici 2023',sortD=true;
+function buildExplorer(){
+  const cols=Object.keys(D.table[0]).filter(c=>c!=='Opština');
+  const opt=v=>cols.map(c=>`<option ${c===v?'selected':''}>${esc(c)}</option>`).join('');
+  $('#ex').innerHTML=opt('Fakultet % (15+)');$('#ey').innerHTML=opt('Neto plata 2025 €');
+  $('#ex').onchange=$('#ey').onchange=scatter;new ResizeObserver(scatter).observe($('#scatter'));table();
+}
+function scatter(){
+  const sv=$('#scatter'),W=sv.clientWidth,H=sv.clientHeight;if(!W)return;const X=$('#ex').value,Y=$('#ey').value;
+  const pts=D.table.filter(r=>r[X]!=null&&r[Y]!=null);const xs=pts.map(r=>r[X]),ys=pts.map(r=>r[Y]);
+  const pad={l:44,r:W>420?70:16,t:10,b:30},x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const sx=v=>pad.l+(v-x0)/((x1-x0)||1)*(W-pad.l-pad.r),sy=v=>H-pad.b-(v-y0)/((y1-y0)||1)*(H-pad.t-pad.b);
+  const n=pts.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0,syy=0;pts.forEach(r=>{sxy+=(r[X]-mx)*(r[Y]-my);sxx+=(r[X]-mx)**2;syy+=(r[Y]-my)**2});
+  const rr=sxy/Math.sqrt(sxx*syy);$('#corr').textContent=`Korelacija r = ${fmt(rr,2)} na ${n} opština. Veličina tačke = broj stanovnika.`;
+  const ink=getComputedStyle(document.body).color;
+  sv.innerHTML=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="${ink}" opacity=".3"/><line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="${ink}" opacity=".3"/>
+  <text x="${W-pad.r}" y="${H-6}" text-anchor="end" font-size="12" fill="${ink}">${esc(X)}</text><text x="${pad.l+4}" y="${pad.t+10}" font-size="12" fill="${ink}">${esc(Y)}</text>
+  <text x="${pad.l-4}" y="${H-pad.b}" text-anchor="end" font-size="11" fill="${ink}" opacity=".7">${fmt(y0,0)}</text><text x="${pad.l-4}" y="${pad.t+22}" text-anchor="end" font-size="11" fill="${ink}" opacity=".7">${fmt(y1,0)}</text>`+
+  pts.map(r=>{const m=r['Opština'],x=sx(r[X]),y=sy(r[Y]),rad=3+Math.sqrt(r['Stanovnici 2023'])/40;
+   return`<g data-m="${esc(m)}" style="cursor:pointer"><circle cx="${x}" cy="${y}" r="${rad}" fill="${m===sel?'#d9a441':'#630D3D'}" fill-opacity=".8" stroke="#fff"/>${W>420||rad>6?`<text x="${x+rad+2}" y="${y+4}" font-size="11" fill="${ink}">${esc(m)}</text>`:''}</g>`}).join('');
+  sv.onclick=e=>{const g=e.target.closest('g[data-m]');if(g)focusMuni(g.dataset.m)};
+}
+function table(){
+  const cols=Object.keys(D.table[0]);const rows=[...D.table].sort((a,b)=>sortC==='Opština'?a[sortC].localeCompare(b[sortC])*(sortD?-1:1):((b[sortC]??-1e9)-(a[sortC]??-1e9))*(sortD?1:-1));
+  $('#extab').innerHTML=`<thead><tr>${cols.map(c=>`<th data-c="${esc(c)}">${esc(c)}${c===sortC?(sortD?' ↓':' ↑'):''}</th>`).join('')}</tr></thead><tbody>`+
+   rows.map(r=>`<tr data-m="${esc(r['Opština'])}" class="${r['Opština']===sel?'hl':''}">${cols.map(c=>`<td class="${c==='Opština'?'':'num'}">${c==='Opština'?esc(r[c]):fmt(r[c],1)}</td>`).join('')}</tr>`).join('')+'</tbody>';
+}
+$('#extab').addEventListener('click',e=>{const th=e.target.closest('th');if(th){const c=th.dataset.c;sortD=c===sortC?!sortD:true;sortC=c;table();return}const tr=e.target.closest('tr[data-m]');if(tr)focusMuni(tr.dataset.m)});
+function focusMuni(m){sel=m;const c=D.cities.find(x=>x.name===m),r=cv.getBoundingClientRect();s=Math.max(s,9);tx=r.width/2-SQ3*(c.q+c.r/2)*s;ty=r.height/2+1.5*c.r*s;draw();table();scatter()}
+
+/* ---------- sources ---------- */
+function buildSources(){
+  const S=Object.entries(D.sources).reduce((m,[k,v])=>{(m[v]=m[v]||[]).push(k);return m},{});
+  $('#p-sources').innerHTML=`<h3 style="font-size:20px">Kako je mapa napravljena</h3>
+  <p>Crna Gora je podijeljena na ${fmt(hexes.length)} heksova od oko 8 km² (${fmt(hexes.filter(h=>h.muni).length)} kopnenih). Svaki kopneni heks pripada opštini u kojoj mu je središte. Brojke opština (zarade, firme, fakultet, noćenja) raspoređene su po heksovima prema broju stanovnika iz Kontur mreže, a noćenja prema smještajnim objektima iz OpenStreetMap-a. Zbir po opštini uvijek je jednak zvaničnom podatku.</p>
+  <p><b>Zlato nije BDP.</b> MONSTAT ne objavljuje BDP po opštinama. Zlato je masa neto zarada: zaposleni 2024 x prosječna neto plata 2025 x 12.</p>
+  <p><b>Teren je izveden iz reljefa</b> (Terrarium visine, oko 110 m), ne iz sloja pokrivača tla. Šume se zato ne vide. Hrana je pravilo igre po terenu, ne podatak o poljoprivredi.</p>
+  <p><b>Distrikti i čuda</b> se dodjeljuju po objavljenim pravilima, vidljivim u pogledu grada. Čuda su 20 objekata u CG sa najviše jezičkih verzija na Wikipediji (Wikidata, novembar 2026), bez rijeka, jezika i regiona.</p>
+  <p><b>Kontrola zbirova:</b> stanovnici ${fmt(nat.pop2023)}, zaposleni ${fmt(nat.employed2024)}, nezaposleni ${fmt(nat.unemployed_jan2026)}, firme ${fmt(nat.firms2025)}, studenti ${fmt(nat.students2024)} - jednako zvaničnim ukupnim brojevima.</p>
+  <h3 style="font-size:20px;margin-top:16px">Zvanični izvori po polju</h3>
+  <ul>${Object.entries(S).map(([src,f])=>`<li>${esc(src)} <span class="muted">(${f.map(esc).join(', ')})</span></li>`).join('')}</ul>
+  <h3 style="font-size:20px;margin-top:16px">Prostorni i otvoreni izvori</h3>
+  <ul><li>Granice 25 opština: Kontur Boundaries ME 2023 (OSM, CC BY 4.0)</li><li>Naseljenost: Kontur Population ME 2023, H3 mreža (CC BY 4.0)</li><li>Reljef: Terrarium visinske pločice (AWS Open Data, Mapzen)</li><li>Skadarsko jezero: Natural Earth (javno dobro)</li><li>Bogomolje, smještaj, baština: © OpenStreetMap saradnici (ODbL), novembar 2026</li><li>Elektrane i čuda: Wikidata (CC0)</li></ul>
+  <p class="muted">Po uzoru na Karpathyjev USA Civ (karpathy.ai/usaciv). Napravio Schule d.o.o., Podgorica. Podaci zaključno sa 26.11.2026.</p>`;
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));document.querySelectorAll('.pane').forEach(p=>p.hidden=p.id!=='p-'+t);if(t==='explorer')scatter()}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('button[data-t]');if(b)showTab(b.dataset.t)});
+}
+</script>
+</body>
+</html>
