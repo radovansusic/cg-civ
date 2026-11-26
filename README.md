@@ -2,6 +2,8 @@
 
 **Montenegro as a Civilization map.** 25 municipalities on 1,850 hexes, built only from real public data: MONSTAT, Census 2023, the employment agency, OpenStreetMap and Wikidata. Gold is the wage bill, Science is university graduates, Wonders are the most-documented landmarks.
 
+**Mapa uživo / Live map: https://radovansusic.github.io/cg-civ/**
+
 Interaktivna mapa Crne Gore u stilu Civilizacije. Svih 25 opština sa stvarnim podacima, preračunatim na mrežu od 1.850 heksova od po oko 8 km².
 
 ![CG Civ - mapa terena sa gradovima i čudima](docs/mapa.png)
@@ -52,6 +54,7 @@ Kontrola zbirova: stanovnici 623.633, zaposleni 257.390, nezaposleni 26.833, fir
 
 ```bash
 python3 -m http.server -d site 8000   # zatim otvori http://localhost:8000
+# GitHub Pages: korijen repoa preusmjerava na site/; kopija je i u docs/
 ```
 
 Ponovna izgradnja podataka (izvorni fajlovi idu u `raw/`, koji nije u repou):
