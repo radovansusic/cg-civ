@@ -97,6 +97,11 @@ tbody tr{cursor:pointer}
 #city .box{background:var(--panel);color:var(--ink);border-left:2px solid var(--gold2);width:100%;height:100%;overflow:auto;box-shadow:-12px 0 40px rgba(0,0,0,.55)}
 #city .top{background:linear-gradient(120deg,#6e1446,#2a0a1e 70%,#141f2a);border-bottom:2px solid var(--gold2);color:#fff;padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
 #city .top h2{font-size:36px;font-variant:small-caps;letter-spacing:.05em;color:#f6ecd2}
+.grp{margin:0 0 10px}.gt{font-family:Caladea,serif;font-variant:small-caps;letter-spacing:.04em;color:var(--gold);font-size:16px;margin:12px 0 4px;border-bottom:1px solid var(--line)}
+.kv2{width:100%;font-size:14px}.kv2 td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap}.kv2 td:first-child{white-space:normal;text-align:start;position:static;background:none}
+.kv2 td:nth-child(2){text-align:end}.kv2 td:nth-child(3){width:90px}.kv2 td:last-child{text-align:end;width:44px}
+.trk{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,#2f6ea6,#3a4a5a 50%,#a3243f)}.trk i{position:absolute;top:-3px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#ffd166;border:2px solid #1b1405}
+.trk s{position:absolute;top:-4px;width:2px;height:14px;margin-left:-1px;background:#fff;opacity:.85}
 .medals{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.med{width:62px;text-align:center;font-size:11px;color:#e8dcc0}
 .med b{display:grid;place-items:center;width:38px;height:38px;margin:0 auto 2px;border-radius:50%;font:700 14px Caladea,serif;color:#2a1c08;border:2px solid rgba(0,0,0,.35);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
 .m1 b{background:radial-gradient(circle at 35% 30%,#fff1b8,#c99a2e)}.m2 b{background:radial-gradient(circle at 35% 30%,#ffffff,#a9b0b8)}.m3 b{background:radial-gradient(circle at 35% 30%,#f3c9a0,#a8673a)}
@@ -169,8 +174,8 @@ const YC={food:'#4f9a3c',prod:'#c8692a',gold:'#c9952c',science:'#3f7fc9',culture
 let hov=null,touched=false,D,V,hexes,byKey={},cityByKey={},T={},nat,s=10,tx=0,ty=0,lens='terrain',sel=null,dpr=1;
 const cv=$('#map');let cx=cv.getContext('2d');const CX0=cx;
 
-let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=6'}
-Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=6').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
+let COAST=null;{const im=new Image();im.onload=()=>{COAST=im;SC=null;draw()};im.src='obala.png?v=7'}
+Promise.all(['cgciv.json','cgviz.json'].map(u=>fetch(u+'?v=7').then(r=>r.json()))).then(([d,v])=>{D=d;V=v;init()}).catch(e=>{console.error(e.stack);$('#legend').textContent='Podaci nijesu učitani: '+e.message});
 
 function init(){
   hexes=D.hexes;nat=D.meta.nat;
@@ -601,7 +606,7 @@ cv.addEventListener('pointermove',e=>{
   {const hh=pick(e.offsetX,e.offsetY),m=hh&&hh.muni||null;if(m!==hov){hov=m;draw()}}
   tip(e.offsetX,e.offsetY)});
 cv.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;cv.style.cursor='grab';
-  if(drag&&moved<6){const h=pick(e.offsetX,e.offsetY);if(h){const c=cityByKey[h.q+','+h.r];if(c)openCity(c.name);else hexInfo(h)}}drag=null});
+  if(drag&&moved<6){const h=pick(e.offsetX,e.offsetY);if(h){const c=cityByKey[h.q+','+h.r];if(c)openCity(c.name);else if(h.muni)openCity(h.muni,h);else hexInfo(h)}}drag=null});
 cv.addEventListener('pointerleave',()=>{$('#tip').style.display='none';if(hov){hov=null;draw()}});
 cv.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.offsetX,e.offsetY,Math.exp(-e.deltaY*.0015))},{passive:false});
 function zoomAt(x,y,f){touched=true;const ns=Math.max(3,Math.min(80,s*f));f=ns/s;tx=x-(x-tx)*f;ty=y-(y-ty)*f;s=ns;draw()}
@@ -626,7 +631,7 @@ function hexInfo(h){$('#hexInfo').innerHTML=`<div class="card" style="margin-top
 
 /* ---------- city view ---------- */
 const rank=(m,c,desc=true)=>{const arr=D.table.filter(r=>r[c]!=null).sort((a,b)=>desc?b[c]-a[c]:a[c]-b[c]);const i=arr.findIndex(r=>r['Opština']===m);return i<0?'':`${i+1}. od ${arr.length}`};
-function openCity(name){
+function openCity(name,hx){
   const c=D.cities.find(x=>x.name===name),t=T[name],z=c.citizens;sel=name;$('#tip').style.display='none';
   {const r=cv.getBoundingClientRect(),dw=Math.min(600,innerWidth),ov=Math.max(0,dw-(innerWidth-r.right)),vw=Math.max(200,r.width-ov);touched=true;s=Math.max(s,Math.min(22,r.height/40));tx=vw*.5-SQ3*(c.q+c.r/2)*s;ty=r.height*.5+1.5*c.r*s;draw()}
   const med=[['Stanovnici','Stanovnici 2023'],['Zlato','Masa zarada mil. €'],['Plata','Neto plata 2025 €'],['Bogatstvo','Indeks bogatstva']].map(([l,k])=>{const rk=D.table.filter(r=>r[k]!=null).sort((a,b)=>b[k]-a[k]).findIndex(r=>r['Opština']===name)+1;
@@ -636,8 +641,9 @@ function openCity(name){
   const W=D.wonders.filter(w=>w.muni===name);
   const pops=[['1991',c.pop1991],['2011',c.pop2011],['2023',c.pop]].filter(p=>p[1]);const pm=Math.max(...pops.map(p=>p[1]));
   const kv=[['Indeks bogatstva (procjena)','Indeks bogatstva',''],['Neto plata 2025','Neto plata 2025 €',' €'],['Neto plata 01-09.2026','Neto plata 01-09.2026 €',' €'],['Masa zarada po stanovniku','Masa zarada po st. €',' €'],['Zaposleni 2024','Zaposleni 2024',''],['Nezaposlenost ZZZCG jun 2026','Nezaposlenost % (reg.)','%'],['Aktivne firme 2025','Firme 2025',''],['Firme na 1.000 stanovnika','Firme na 1.000 st.',''],['Rast firmi 2024-25','Rast firmi 2024-25 %','%'],['Noćenja 2025 (ukupno)','Noćenja 2025',''],['Hoteli avg-sep 2026','Hoteli noćenja avg-sep 2026',''],['Rast hotela avg-sep 2026','Rast hotela avg-sep 2026 %','%'],['Sezonski stanovi','Sezonski stanovi %','%'],['Prirodni priraštaj 2025','Prirodni priraštaj ‰','‰'],['Ljekari na 10.000','Ljekari na 10.000 st.','']];
-  $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Pogled grada</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div><div class="medals">${med}</div></div><button class="x" aria-label="Zatvori">×</button></div>
+  $('#cityBox').innerHTML=`<div class="top"><div><div style="opacity:.8;font-size:14px">Opština · klik na bilo koji heks</div><h2 id="cityName">${esc(name)}</h2><div class="num">${fmt(c.pop)} stanovnika · ${fmt(c.area_km2)} km² · ${c.hexes} heksova</div><div class="medals">${med}</div></div><button class="x" aria-label="Zatvori">×</button></div>
   <div class="body"><div>
+   ${hx?`<div class="card" style="margin-bottom:12px"><h3>Izabrani heks</h3>${hexLines(hx)}</div>`:''}
    <h3 style="font-size:19px;margin-bottom:8px">Prinosi</h3><div class="yields">${ys.map(([l,v,k])=>`<div class="y" style="background:${YC[k]};${k==='faith'?'color:#1c1a17':''}"><b>${fmt(v,k==='gold'?1:0)}</b><span>${l}</span></div>`).join('')}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Distrikti</h3><div class="dist">${c.districts.length?c.districts.map(d=>`<span><b>${esc(d.n)}</b><i>${esc(d.why)}</i></span>`).join(''):'<span class="muted">Nijedno pravilo za distrikt nije ispunjeno.</span>'}</div>
    <h3 style="font-size:19px;margin:16px 0 8px">Narod i jezik (Popis 2023)</h3>${mix(c.nation_mix,CATS['cat:_nacija'].c)}${mix(c.lang_mix,CATS['cat:_jezik'].c)}
@@ -649,11 +655,27 @@ function openCity(name){
    <p style="margin:0 0 6px">Mladih do 14 godina ${fmt(z.age0_14,1)}%, starijih od 65 ${fmt(z.age65,1)}%.</p>
    <h3 style="font-size:19px;margin:14px 0 22px">Stanovništvo po popisima</h3>
    <div class="popbars">${pops.map(p=>`<div style="height:${p[1]/pm*100}%"><span class="num">${fmt(p[1])}</span></div>`).join('')}</div><div>${pops.map(p=>`<span>${p[0]}</span>`).join('')}</div>
-   <h3 style="font-size:19px;margin:16px 0 6px">Ključne brojke</h3>
-   <table class="kv">${kv.map(([l,k,u])=>`<tr><td>${l}</td><td class="num">${fmt(t[k],1)}${t[k]==null?'':u}</td><td class="muted num">${rank(name,k)}</td></tr>`).join('')}</table>
+   <h3 style="font-size:19px;margin:16px 0 6px">Svi podaci opštine</h3>
+   <p class="muted" style="margin:0 0 6px">Traka pokazuje gdje je opština između najmanje i najveće vrijednosti među 25 opština; crtica je Crna Gora.</p>
+   ${allData(name)}
   </div></div>`;
   $('#city').classList.add('open');$('#cityBox .x').onclick=closeCity;$('#cityBox .x').focus();
 }
+const GRP=[['Stanovništvo',[['Stanovnici 2023',''],['Promjena 1991-2023 %','%'],['Gustina st/km2',''],['Prirodni priraštaj ‰','‰'],['0-14 %','%'],['65+ %','%']]],
+ ['Rad i plate',[['Neto plata 2025 €',' €'],['Neto plata 01-09.2026 €',' €'],['Rast plate 2026/2025 %','%'],['Masa zarada mil. €',' mil. €'],['Masa zarada po st. €',' €'],['Zaposleni 2024',''],['Zaposleni na 100 st.',''],['Nezaposleni 6/2026',''],['Nezaposlenost % (reg.)','%']]],
+ ['Privreda i bogatstvo',[['Firme 2025',''],['Firme na 1.000 st.',''],['Rast firmi 2024-25 %','%'],['Indeks bogatstva','']]],
+ ['Znanje',[['Fakultet % (15+)','%'],['Programiranje %','%'],['Studenti na 1.000 st.','']]],
+ ['Turizam i stanovanje',[['Noćenja 2025',''],['Noćenja po stanovniku',''],['Hoteli noćenja avg-sep 2026',''],['Rast hotela avg-sep 2026 %','%'],['Sezonski stanovi %','%'],['Smještaj (OSM objekti)','']]],
+ ['Zdravlje i socijala',[['Ljekari na 10.000 st.',''],['MOP korisnici na 1.000 st.','']]],
+ ['Popis 2023: nacija, jezik, vjera',[['Crnogorci %','%'],['Srbi %','%'],['Bošnjaci %','%'],['Albanci %','%'],['Muslimani %','%'],['Hrvati %','%'],['Romi %','%'],['Rusi %','%'],['Ukrajinci %','%'],['Govori srpski %','%'],['Govori crnogorski %','%'],['Govori bosanski %','%'],['Govori albanski %','%'],['Pravoslavni %','%'],['Islam %','%'],['Katolici %','%'],['Ateisti %','%'],['Bogomolje (OSM)','']]]];
+const SUMC=new Set(['Stanovnici 2023','Masa zarada mil. €','Zaposleni 2024','Nezaposleni 6/2026','Firme 2025','Noćenja 2025','Hoteli noćenja avg-sep 2026','Smještaj (OSM objekti)','Bogomolje (OSM)']);
+function cgVal(k){const rs=D.table.filter(r=>r[k]!=null);if(SUMC.has(k))return rs.reduce((a,r)=>a+r[k],0);if(k==='Indeks bogatstva')return 0;
+  const w=rs.reduce((a,r)=>a+r['Stanovnici 2023'],0);return rs.reduce((a,r)=>a+r[k]*r['Stanovnici 2023'],0)/w}
+function allData(name){const t=T[name],f=(v,u)=>v==null?'-':(Math.abs(v)<10&&!Number.isInteger(v)?v.toLocaleString('sr-Latn-ME',{minimumFractionDigits:1,maximumFractionDigits:1}):fmt(v))+(v==null?'':u);
+  return GRP.map(([g,rows])=>`<div class="grp"><div class="gt">${g}</div><table class="kv2">`+rows.filter(([k])=>t[k]!=null).map(([k,u])=>{
+    const vs=D.table.map(r=>r[k]).filter(v=>v!=null),lo=Math.min(...vs),hi=Math.max(...vs),cg=cgVal(k),pos=(t[k]-lo)/((hi-lo)||1)*100,cp=SUMC.has(k)?null:(cg-lo)/((hi-lo)||1)*100;
+    return `<tr><td>${esc(k.replace(/ (€|%|‰)$/,'').replace(' %',''))}</td><td class="num"><b>${f(t[k],u)}</b></td><td><div class="trk"><i style="left:${pos}%"></i>${cp!=null?`<s style="left:${cp}%"></s>`:''}</div></td><td class="muted num">${rank(name,k).replace(' od ','/')}</td></tr>`}).join('')+'</table></div>').join('')+
+  `<p class="muted" style="margin-top:8px">CG vrijednost: zbir za brojeve, prosjek ponderisan stanovnicima za stope i udjele. Izvori su u kartici Izvori.</p>`}
 function mix(o,cols){const e=Object.entries(o).sort((a,b)=>b[1]-a[1]);return`<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin:4px 0 2px">${e.map(([k,v])=>`<div title="${esc(k)} ${fmt(v,1)}%" style="width:${v}%;background:${cols[k]||'#9a9a9a'}"></div>`).join('')}</div><div class="muted">${e.slice(0,4).map(([k,v])=>`${esc(k)} ${fmt(v,1)}%`).join(' · ')}</div>`}
 function closeCity(){$('#city').classList.remove('open')}
 $('#city').addEventListener('click',e=>{if(e.target.id==='city')closeCity()});
