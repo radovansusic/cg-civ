@@ -369,9 +369,9 @@ function draw(){
   if(SC.s===s)overlay(W,H);else{legend();mini()}
   placeMyth(W,H);
 }
-function mythShow(){const m=$('#myth');m.classList.remove('on');m.setAttribute('aria-hidden',!showHoly);if(showHoly){void m.offsetWidth;m.classList.add('on')}}
+function mythShow(){const m=$('#myth');m.classList.remove('on');m.setAttribute('aria-hidden',!mythOn);if(mythOn){void m.offsetWidth;m.classList.add('on')}}
 function placeMyth(W,H){const m=$('#myth'),h=V.holy.find(x=>x.id==='Q13424615');if(!h)return;const x=h.p[0]*s+tx,y=h.p[1]*s+ty,z=Math.max(70,Math.min(200,s*5));
-  m.style.width=m.style.height=z+'px';m.style.left=x+'px';m.style.top=y+'px';m.style.display=(!showHoly||x<-z||y<-z||x>W+z||y>H+z)?'none':'block';
+  m.style.width=m.style.height=z+'px';m.style.left=x+'px';m.style.top=y+'px';m.style.display=(!mythOn||x<-z||y<-z||x>W+z||y>H+z)?'none':'block';
   const L=m.querySelector('.mlab');L.style.fontSize=Math.max(13,Math.min(18,s*.6))+'px';L.style.display=s<9?'none':'block'}
 function rebuild(W,H){
   if(!SC||SC.W!==W||SC.H!==H||SC.dpr!==dpr){const c=document.createElement('canvas');c.width=(W+2*MG)*dpr;c.height=(H+2*MG)*dpr;SC={c,g:c.getContext('2d')}}
@@ -507,7 +507,7 @@ function starP(x,y,r,col){cx.beginPath();for(let i=0;i<10;i++){const a=Math.PI/5
 function medal(x,y,r){const g=cx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);g.addColorStop(0,'#fff1b8');g.addColorStop(1,'#b8862a');
   cx.beginPath();cx.arc(x,y,r,0,7);cx.fillStyle=g;cx.fill();cx.strokeStyle='#3a2600';cx.lineWidth=1.2;cx.stroke();starP(x,y,r*.62,'#5a3a00')}
 /* sveta mjesta: značka u obliku heksa sa simbolom; ista boja za sve vjere */
-let showHoly=false;
+let showHoly=true,mythOn=false;
 const HK={orthodox:'Pravoslavni hram',catholic:'Katolički hram',islam:'Džamija',memorial:'Memorijalno mjesto'};
 function holyGlyph(g,k,z){g.save();g.fillStyle='#3a2a12';g.strokeStyle='#3a2a12';g.lineWidth=z*.09;const u=z*.55;
   if(k==='islam'){g.beginPath();g.arc(-u*.15,u*.15,u*.48,Math.PI,0);g.lineTo(u*.33,u*.62);g.lineTo(-u*.63,u*.62);g.closePath();g.fill();g.fillRect(u*.5,-u*.65,u*.2,u*1.27);g.beginPath();g.arc(u*.6,-u*.82,u*.17,0,7);g.fill()}
@@ -543,7 +543,7 @@ function buildSearch(){
   $('#q').addEventListener('change',e=>{const v=e.target.value.trim();if(!v)return;
     if(T[v]){openCity(v);e.target.value='';return}
     const w=D.wonders.find(x=>x.name===v),h=V.holy.find(x=>x.n===v);let px,py;
-    if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];if(!showHoly){showHoly=true;lensbar();mythShow()}}else return;
+    if(w){px=SQ3*(w.q+w.r/2);py=-1.5*w.r}else if(h){px=h.p[0];py=h.p[1];if(h.id==='Q13424615'&&!mythOn){mythOn=true;lensbar();mythShow()}}else return;
     const r=cv.getBoundingClientRect();touched=true;s=Math.max(s,16);tx=r.width/2-px*s;ty=r.height/2-py*s;draw();
     setTimeout(()=>{if(h&&h._xy){tip(h._xy[0],h._xy[1])}else tip(r.width/2,r.height/2)},80);e.target.value=''})}
 ['#myth .mlab','#myth .core'].forEach(q=>document.querySelector(q).addEventListener('click',e=>{const h=V.holy.find(x=>x.id==='Q13424615'),t=$('#tip'),r=cv.getBoundingClientRect(),b=e.target.getBoundingClientRect();
@@ -561,8 +561,8 @@ function mini(){
 }
 $('#mini').addEventListener('click',e=>{if(!miniT)return;const[k,ox,oy]=miniT,wx=(e.offsetX-ox)/k,wy=(e.offsetY-oy)/k,r=cv.getBoundingClientRect();touched=true;tx=r.width/2-wx*s;ty=r.height/2-wy*s;draw()});
 const QL=[['terrain','Teren'],['pop','Stanovnici'],['gold','Zlato'],['m:Indeks bogatstva','Bogatstvo'],['nights','Turizam'],['science','Nauka'],['cat:_nacija','Nacija']];
-function lensbar(){$('#lensbar').innerHTML=`<button id="holyT" aria-pressed="${showHoly}" title="Prikaži ili sakrij sveta mjesta">Sveta mjesta</button>`+QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
-$('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){showHoly=!showHoly;e.target.setAttribute('aria-pressed',showHoly);mythShow();draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
+function lensbar(){$('#lensbar').innerHTML=`<button id="holyT" aria-pressed="${mythOn}" title="Prikaži kapelu na Lovćenu">Sveta mjesta</button>`+QL.map(([k,l])=>`<button data-k="${esc(k)}" aria-pressed="${k===lens}">${l}</button>`).join('')}
+$('#lensbar').addEventListener('click',e=>{if(e.target.id==='holyT'){mythOn=!mythOn;e.target.setAttribute('aria-pressed',mythOn);mythShow();draw();return}const b=e.target.closest('button[data-k]');if(b)setLens(b.dataset.k)});
 
 /* ---------- interaction ---------- */
 function pick(sx,sy){const px=(sx-tx)/s,py=(sy-ty)/s;let r=-py/1.5,q=px/SQ3-r/2,z=-q-r;let rq=Math.round(q),rr2=Math.round(r),rz=Math.round(z);
